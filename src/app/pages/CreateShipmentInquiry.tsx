@@ -18,6 +18,8 @@ import {
   Box,
   Weight,
   Ruler,
+  Sparkles,
+  XCircle,
 } from "lucide-react";
 import {
   FormModal,
@@ -303,6 +305,87 @@ export default function CreateShipmentInquiry() {
     setAttachments([]);
   };
 
+  const handlePrefill = () => {
+    // Generate dates relative to today
+    const today = new Date();
+    const pickupDate = new Date(today);
+    pickupDate.setDate(today.getDate() + 2);
+    const deliveryDate = new Date(today);
+    deliveryDate.setDate(today.getDate() + 5);
+
+    setBasicInfo({
+      serviceType: "express",
+      pickupDate: pickupDate.toISOString().split("T")[0],
+      pickupTime: "10:00",
+      deliveryDate: deliveryDate.toISOString().split("T")[0],
+      urgency: "high",
+    });
+
+    setPickupDetails({
+      contactName: "John Doe",
+      contactPhone: "+971 50 123 4567",
+      contactEmail: "john.doe@example.com",
+      address: "Building 5, Street 12, Business Bay",
+      city: "Business Bay",
+      emirate: "Dubai",
+      landmark: "Near Metro Station",
+      instructions: "Call upon arrival",
+    });
+
+    setDeliveryDetails({
+      contactName: "Jane Smith",
+      contactPhone: "+971 55 987 6543",
+      contactEmail: "jane.smith@example.com",
+      address: "Villa 12, Corniche Road",
+      city: "Al Khalidiya",
+      emirate: "Abu Dhabi",
+      landmark: "Opposite Mall",
+      instructions: "Leave at security gate",
+    });
+
+    setCargoItems([
+      {
+        id: "1",
+        description: "High-end Electronics",
+        quantity: 5,
+        weight: 25.5,
+        length: 50,
+        width: 40,
+        height: 30,
+        value: 15000,
+      },
+      {
+        id: Date.now().toString(),
+        description: "Accessories Box",
+        quantity: 2,
+        weight: 5,
+        length: 20,
+        width: 20,
+        height: 15,
+        value: 2000,
+      }
+    ]);
+
+    setCargoType("electronics");
+
+    setSpecialHandling({
+      fragile: true,
+      refrigerated: false,
+      hazardous: false,
+      oversized: false,
+    });
+
+    setAdditionalInfo({
+      insuranceRequired: true,
+      insuranceValue: "17000",
+      packagingRequired: true,
+      packagingType: "bubble",
+      notes: "Please handle with extra care as these are expensive items.",
+    });
+
+    toast.success("Form prefilled with sample data");
+  };
+
   const renderStepIndicator = () => (
     <div className="mb-8">
       <div className="flex items-center justify-between">
@@ -316,13 +399,12 @@ export default function CreateShipmentInquiry() {
           <div key={s.num} className="flex items-center flex-1">
             <div className="flex flex-col items-center flex-1">
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-colors ${
-                  step === s.num
-                    ? "bg-primary-500 text-white"
-                    : step > s.num
+                className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-colors ${step === s.num
+                  ? "bg-primary-500 text-white"
+                  : step > s.num
                     ? "bg-success-500 text-white"
                     : "bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400"
-                }`}
+                  }`}
               >
                 {step > s.num ? (
                   <CheckCircle className="w-5 h-5" />
@@ -331,22 +413,20 @@ export default function CreateShipmentInquiry() {
                 )}
               </div>
               <span
-                className={`text-xs mt-2 ${
-                  step >= s.num
-                    ? "text-neutral-900 dark:text-white font-medium"
-                    : "text-neutral-500 dark:text-neutral-500"
-                }`}
+                className={`text-xs mt-2 ${step >= s.num
+                  ? "text-neutral-900 dark:text-white font-medium"
+                  : "text-neutral-500 dark:text-neutral-500"
+                  }`}
               >
                 {s.label}
               </span>
             </div>
             {index < 4 && (
               <div
-                className={`h-1 flex-1 mx-2 rounded transition-colors ${
-                  step > s.num
-                    ? "bg-success-500"
-                    : "bg-neutral-200 dark:bg-neutral-800"
-                }`}
+                className={`h-1 flex-1 mx-2 rounded transition-colors ${step > s.num
+                  ? "bg-success-500"
+                  : "bg-neutral-200 dark:bg-neutral-800"
+                  }`}
               />
             )}
           </div>
@@ -1365,13 +1445,22 @@ export default function CreateShipmentInquiry() {
     <div className="p-6">
       <div className="max-w-5xl mx-auto">
         {/* Page Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-neutral-900 dark:text-white">
-            Create Shipment Inquiry
-          </h1>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-            Fill in the details below to request a shipment quote
-          </p>
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-neutral-900 dark:text-white">
+              Create Shipment Inquiry
+            </h1>
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+              Fill in the details below to request a shipment quote
+            </p>
+          </div>
+          <button
+            onClick={handlePrefill}
+            className="px-4 py-2 text-sm text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50 rounded-lg transition-colors flex items-center gap-2"
+          >
+            <Sparkles className="w-4 h-4" />
+            Prefill Form
+          </button>
         </div>
 
         {/* Step Indicator */}
