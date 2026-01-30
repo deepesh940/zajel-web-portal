@@ -17,6 +17,7 @@ import {
   Filter,
   Eye,
   Mail,
+  ArrowRight
 } from "lucide-react";
 import {
   PageHeader,
@@ -34,12 +35,12 @@ import { toast } from "sonner";
 interface Notification {
   id: string;
   type:
-    | "quote"
-    | "shipment"
-    | "payment"
-    | "delivery"
-    | "system"
-    | "inquiry";
+  | "quote"
+  | "shipment"
+  | "payment"
+  | "delivery"
+  | "system"
+  | "inquiry";
   title: string;
   message: string;
   timestamp: string;
@@ -279,20 +280,23 @@ export default function Notifications() {
     switch (priority) {
       case "high":
         return (
-          <span className="inline-flex px-2 py-0.5 text-xs font-medium rounded bg-error-100 dark:bg-error-900/30 text-error-700 dark:text-error-400">
-            High
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
+            <div className="w-1.5 h-1.5 rounded-full bg-error-500"></div>
+            <span className="text-xs text-neutral-600 dark:text-neutral-400">High</span>
           </span>
         );
       case "medium":
         return (
-          <span className="inline-flex px-2 py-0.5 text-xs font-medium rounded bg-warning-100 dark:bg-warning-900/30 text-warning-700 dark:text-warning-400">
-            Medium
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
+            <div className="w-1.5 h-1.5 rounded-full bg-warning-500"></div>
+            <span className="text-xs text-neutral-600 dark:text-neutral-400">Medium</span>
           </span>
         );
       case "low":
         return (
-          <span className="inline-flex px-2 py-0.5 text-xs font-medium rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-400">
-            Low
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
+            <div className="w-1.5 h-1.5 rounded-full bg-neutral-400"></div>
+            <span className="text-xs text-neutral-600 dark:text-neutral-400">Low</span>
           </span>
         );
     }
@@ -301,14 +305,16 @@ export default function Notifications() {
   const getStatusBadge = (read: boolean) => {
     if (!read) {
       return (
-        <span className="inline-flex px-2 py-0.5 text-xs font-medium rounded bg-warning-100 dark:bg-warning-900/30 text-warning-700 dark:text-warning-400">
-          Unread
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
+          <div className="w-1.5 h-1.5 rounded-full bg-primary-500"></div>
+          <span className="text-xs text-neutral-600 dark:text-neutral-400">Unread</span>
         </span>
       );
     }
     return (
-      <span className="inline-flex px-2 py-0.5 text-xs font-medium rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-400">
-        Read
+      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
+        <div className="w-1.5 h-1.5 rounded-full bg-neutral-400"></div>
+        <span className="text-xs text-neutral-600 dark:text-neutral-400">Read</span>
       </span>
     );
   };
@@ -415,7 +421,7 @@ export default function Notifications() {
             onChange={setSearchQuery}
             placeholder="Search notifications..."
             showAdvancedSearch={false}
-            onToggleAdvancedSearch={() => {}}
+            onToggleAdvancedSearch={() => { }}
             onToggleSummary={() => setShowSummary(!showSummary)}
             showSummary={showSummary}
             filterOptions={filterOptions}
@@ -471,15 +477,19 @@ export default function Notifications() {
               return (
                 <div
                   key={notification.id}
-                  className={`bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-5 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all cursor-pointer ${
-                    !notification.read ? "bg-primary-50/30 dark:bg-primary-900/10" : ""
-                  }`}
+                  className={`group relative bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-4 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all cursor-pointer ${!notification.read ? "border-l-4 border-l-primary-500" : ""
+                    }`}
                   onClick={() => handleViewDetails(notification)}
                 >
                   <div className="flex items-start gap-4">
+                    {/* Unread Indicator Dot */}
+                    {!notification.read && (
+                      <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-primary-500 ring-2 ring-white dark:ring-neutral-900"></div>
+                    )}
+
                     {/* Icon */}
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${getNotificationColor(
+                      className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${getNotificationColor(
                         notification.type
                       )}`}
                     >
@@ -487,103 +497,104 @@ export default function Notifications() {
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="text-base font-semibold text-neutral-900 dark:text-white">
+                    <div className="flex-1 min-w-0 pr-6">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className={`text-sm font-medium ${!notification.read ? 'text-neutral-900 dark:text-white font-semibold' : 'text-neutral-700 dark:text-neutral-300'}`}>
                           {notification.title}
                         </h3>
-                        <div className="flex items-center gap-2 ml-4">
-                          {getStatusBadge(notification.read)}
-                          <div className="relative">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setOpenActionMenuId(
-                                  openActionMenuId === notification.id
-                                    ? null
-                                    : notification.id
-                                );
-                              }}
-                              className="w-7 h-7 flex items-center justify-center text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded transition-colors"
-                            >
-                              <MoreVertical className="w-4 h-4" />
-                            </button>
-
-                            {openActionMenuId === notification.id && (
-                              <div className="absolute right-0 top-full mt-1 w-56 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg overflow-hidden z-50">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleViewDetails(notification);
-                                  }}
-                                  className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2"
-                                >
-                                  <Eye className="w-4 h-4" />
-                                  View Details
-                                </button>
-
-                                {!notification.read ? (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleMarkAsRead(notification);
-                                    }}
-                                    className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2 border-t border-neutral-200 dark:border-neutral-800"
-                                  >
-                                    <Check className="w-4 h-4" />
-                                    Mark as Read
-                                  </button>
-                                ) : (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleMarkAsUnread(notification);
-                                    }}
-                                    className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2 border-t border-neutral-200 dark:border-neutral-800"
-                                  >
-                                    <Mail className="w-4 h-4" />
-                                    Mark as Unread
-                                  </button>
-                                )}
-
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteNotification(notification);
-                                  }}
-                                  className="w-full px-4 py-2.5 text-left text-sm text-error-600 dark:text-error-400 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2 border-t border-neutral-200 dark:border-neutral-800"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                  Delete
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                        <span className="text-xs text-neutral-400">•</span>
+                        <span className="text-xs text-neutral-500 dark:text-neutral-500">
+                          {formatTimestamp(notification.timestamp)}
+                        </span>
                       </div>
 
-                      <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3 line-clamp-2">
                         {notification.message}
                       </p>
 
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-500">
-                          <Clock className="w-3.5 h-3.5" />
-                          {formatTimestamp(notification.timestamp)}
-                        </div>
+                      <div className="flex items-center gap-2">
                         {getPriorityBadge(notification.priority)}
+                        {getStatusBadge(notification.read)}
+
                         {notification.actionLabel && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               toast.info(`Navigating to ${notification.actionLink}`);
                             }}
-                            className="text-xs text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium"
+                            className="ml-auto text-xs text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
                           >
-                            {notification.actionLabel} →
+                            {notification.actionLabel} <ArrowRight className="w-3 h-3" />
                           </button>
                         )}
                       </div>
+                    </div>
+
+                    {/* Action Menu */}
+                    <div className="relative">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenActionMenuId(
+                            openActionMenuId === notification.id
+                              ? null
+                              : notification.id
+                          );
+                        }}
+                        className="w-8 h-8 flex items-center justify-center text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded transition-colors opacity-0 group-hover:opacity-100"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+
+                      {openActionMenuId === notification.id && (
+                        <div className="absolute right-0 top-full mt-1 w-56 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg overflow-hidden z-50">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewDetails(notification);
+                            }}
+                            className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2"
+                          >
+                            <Eye className="w-4 h-4" />
+                            View Details
+                          </button>
+
+                          {!notification.read ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleMarkAsRead(notification);
+                              }}
+                              className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2 border-t border-neutral-200 dark:border-neutral-800"
+                            >
+                              <Check className="w-4 h-4" />
+                              Mark as Read
+                            </button>
+                          ) : (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleMarkAsUnread(notification);
+                              }}
+                              className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2 border-t border-neutral-200 dark:border-neutral-800"
+                            >
+                              <Mail className="w-4 h-4" />
+                              Mark as Unread
+                            </button>
+                          )}
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteNotification(notification);
+                            }}
+                            className="w-full px-4 py-2.5 text-left text-sm text-error-600 dark:text-error-400 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2 border-t border-neutral-200 dark:border-neutral-800"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -597,14 +608,14 @@ export default function Notifications() {
           <FormModal
             isOpen={showDetailsModal}
             onClose={() => setShowDetailsModal(false)}
-            title={selectedNotification.title}
-            description={`Notification ID: ${selectedNotification.id}`}
-            maxWidth="max-w-2xl"
+            title="Notification Details"
+            maxWidth="max-w-xl"
           >
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
+            <div className="space-y-6">
+              {/* Header Overview */}
+              <div className="bg-neutral-50 dark:bg-neutral-900 p-4 rounded-lg flex items-start gap-4">
                 <div
-                  className={`w-12 h-12 rounded-full flex items-center justify-center ${getNotificationColor(
+                  className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${getNotificationColor(
                     selectedNotification.type
                   )}`}
                 >
@@ -613,37 +624,61 @@ export default function Notifications() {
                     return <Icon className="w-6 h-6" />;
                   })()}
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-medium text-neutral-600 dark:text-neutral-400 uppercase">
-                      {selectedNotification.type}
-                    </span>
-                    {getPriorityBadge(selectedNotification.priority)}
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-500">
-                    <Calendar className="w-3.5 h-3.5" />
+                <div>
+                  <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">
+                    {selectedNotification.title}
+                  </h3>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 capitalize">
+                    {selectedNotification.type} Notification
+                  </p>
+                </div>
+                <div className="ml-auto flex gap-2">
+                  {getPriorityBadge(selectedNotification.priority)}
+                </div>
+              </div>
+
+              {/* Message */}
+              <div>
+                <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">Message</h4>
+                <div className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed bg-white dark:bg-neutral-900">
+                  {selectedNotification.message}
+                </div>
+              </div>
+
+              {/* Meta Details */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
+                  <p className="text-xs text-neutral-500 mb-1">Received</p>
+                  <div className="flex items-center gap-2 text-sm text-neutral-900 dark:text-white font-medium">
+                    <Calendar className="w-4 h-4 text-neutral-400" />
                     {new Date(selectedNotification.timestamp).toLocaleString()}
+                  </div>
+                </div>
+                <div className="p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
+                  <p className="text-xs text-neutral-500 mb-1">Status</p>
+                  <div className="flex items-center gap-2">
+                    {getStatusBadge(selectedNotification.read)}
                   </div>
                 </div>
               </div>
 
-              <div className="p-4 bg-neutral-50 dark:bg-neutral-950 rounded-lg border border-neutral-200 dark:border-neutral-800">
-                <p className="text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-line">
-                  {selectedNotification.message}
-                </p>
-              </div>
-
               {selectedNotification.actionLabel && (
-                <div className="p-4 bg-primary-50 dark:bg-primary-900/30 border border-primary-200 dark:border-primary-800 rounded-lg">
-                  <p className="text-sm text-primary-900 dark:text-primary-300 mb-2">
-                    Action Required
-                  </p>
+                <div className="flex items-center justify-between p-4 bg-primary-50 dark:bg-primary-900/10 border border-primary-100 dark:border-primary-900/20 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400">
+                      <Info className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-neutral-900 dark:text-white">Action Required</p>
+                      <p className="text-xs text-neutral-500">Please review this item.</p>
+                    </div>
+                  </div>
                   <button
                     onClick={() => {
                       toast.info(`Navigating to ${selectedNotification.actionLink}`);
                       setShowDetailsModal(false);
                     }}
-                    className="px-4 py-2 text-sm text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors"
+                    className="px-4 py-2 text-sm text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors shadow-sm"
                   >
                     {selectedNotification.actionLabel}
                   </button>
@@ -651,10 +686,10 @@ export default function Notifications() {
               )}
             </div>
 
-            <FormFooter>
+            <div className="flex items-center justify-end gap-3 pt-6 border-t border-neutral-200 dark:border-neutral-800 mt-6">
               <button
                 onClick={() => setShowDetailsModal(false)}
-                className="px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
               >
                 Close
               </button>
@@ -664,13 +699,13 @@ export default function Notifications() {
                     handleMarkAsRead(selectedNotification);
                     setShowDetailsModal(false);
                   }}
-                  className="px-4 py-2 text-sm text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors flex items-center gap-2"
+                  className="px-4 py-2 text-sm font-medium text-white bg-neutral-900 dark:bg-neutral-100 dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-200 rounded-lg transition-colors flex items-center gap-2"
                 >
                   <Check className="w-4 h-4" />
                   Mark as Read
                 </button>
               )}
-            </FormFooter>
+            </div>
           </FormModal>
         )}
 
