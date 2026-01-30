@@ -1,0 +1,8 @@
+/* Import fonts first - @import must precede all other statements */
+@import "./fonts.css";
+
+/* Import Leaflet CSS */
+@import "leaflet/dist/leaflet.css";
+
+/* Import global styles and Tailwind */
+@import "./globals.css";
