@@ -20,6 +20,7 @@ import {
   Download,
   DollarSign,
   Activity,
+  Receipt,
 } from "lucide-react";
 import {
   PageHeader,
@@ -229,7 +230,7 @@ export default function PricingApproval() {
   ]);
 
   // Filter options for advanced search
-  const filterOptions: FilterCondition[] = [
+  const filterOptions = [
     {
       id: "status",
       label: "Status",
@@ -341,17 +342,16 @@ export default function PricingApproval() {
     return (
       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
         <div
-          className={`w-1.5 h-1.5 rounded-full ${
-            getStatusColor(status) === "success"
-              ? "bg-success-500"
-              : getStatusColor(status) === "warning"
+          className={`w-1.5 h-1.5 rounded-full ${getStatusColor(status) === "success"
+            ? "bg-success-500"
+            : getStatusColor(status) === "warning"
               ? "bg-warning-500"
               : getStatusColor(status) === "error"
-              ? "bg-error-500"
-              : getStatusColor(status) === "info"
-              ? "bg-info-500"
-              : "bg-neutral-400"
-          }`}
+                ? "bg-error-500"
+                : getStatusColor(status) === "info"
+                  ? "bg-info-500"
+                  : "bg-neutral-400"
+            }`}
         ></div>
         <span className="text-xs text-neutral-600 dark:text-neutral-400">{status}</span>
       </span>
@@ -448,6 +448,26 @@ export default function PricingApproval() {
 
   const handleDownloadQuote = (quote: QuoteApproval) => {
     toast.success(`Downloading quote for ${quote.inquiryNumber}`);
+  };
+
+  const handleCreateProformaInvoice = (quote: QuoteApproval) => {
+    const draft = {
+      customerName: quote.customerName,
+      inquiryNumber: quote.inquiryNumber,
+      tripNumber: "",
+      quoteNumber: quote.id, // Using id as placeholder for quote number
+      amount: quote.quote.totalAmount,
+      description: `Proforma Invoice for Approved Quote ${quote.inquiryNumber}\nService: ${quote.serviceType}\nFrom: ${quote.pickupLocation}\nTo: ${quote.deliveryLocation}`,
+      type: "Proforma"
+    };
+
+    localStorage.setItem("pendingProformaDraft", JSON.stringify(draft));
+
+    // Dispatch custom navigation event
+    const event = new CustomEvent('navigate', { detail: 'customer-invoicing' });
+    window.dispatchEvent(event);
+
+    toast.success("Draft proforma invoice created. Redirecting to billing...");
   };
 
   const formatTimestamp = (timestamp: string) => {
@@ -562,7 +582,7 @@ export default function PricingApproval() {
               onClose={() => setShowAdvancedSearch(false)}
               filters={filters}
               onFiltersChange={setFilters}
-              filterOptions={filterOptions}
+              filterOptions={filterOptions as any}
             />
           </div>
 
@@ -593,7 +613,7 @@ export default function PricingApproval() {
                 )
               );
             }}
-            onClearAll={() => setFilters(filterOptions.map((f) => ({ ...f, values: [] })))}
+            onClearAll={() => setFilters((filterOptions as any).map((f: any) => ({ ...f, values: [] })))}
           />
         )}
 
@@ -707,6 +727,19 @@ export default function PricingApproval() {
                               <Download className="w-4 h-4" />
                               Download PDF
                             </button>
+                            {quote.status === "Approved" && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCreateProformaInvoice(quote);
+                                  setOpenActionMenuId(null);
+                                }}
+                                className="w-full px-4 py-2.5 text-left text-sm text-primary-600 dark:text-primary-400 font-medium hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors flex items-center gap-2 border-t border-neutral-200 dark:border-neutral-800"
+                              >
+                                <Receipt className="w-4 h-4" />
+                                Create Proforma Invoice
+                              </button>
+                            )}
                           </div>
                         )}
                       </div>
@@ -903,6 +936,18 @@ export default function PricingApproval() {
                             <Download className="w-4 h-4" />
                             Download PDF
                           </button>
+                          {quote.status === "Approved" && (
+                            <button
+                              onClick={() => {
+                                handleCreateProformaInvoice(quote);
+                                setOpenActionMenuId(null);
+                              }}
+                              className="w-full px-4 py-2.5 text-left text-sm text-primary-600 dark:text-primary-400 font-medium hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors flex items-center gap-2 border-t border-neutral-200 dark:border-neutral-800"
+                            >
+                              <Receipt className="w-4 h-4" />
+                              Create Proforma Invoice
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -1106,6 +1151,19 @@ export default function PricingApproval() {
                                   <Download className="w-4 h-4" />
                                   Download PDF
                                 </button>
+                                {quote.status === "Approved" && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleCreateProformaInvoice(quote);
+                                      setOpenActionMenuId(null);
+                                    }}
+                                    className="w-full px-4 py-2.5 text-left text-sm text-primary-600 dark:text-primary-400 font-medium hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors flex items-center gap-2 border-t border-neutral-200 dark:border-neutral-800"
+                                  >
+                                    <Receipt className="w-4 h-4" />
+                                    Create Proforma Invoice
+                                  </button>
+                                )}
                               </div>
                             )}
                           </div>
@@ -1397,6 +1455,18 @@ export default function PricingApproval() {
                   Approve
                 </button>
               </>
+            )}
+            {selectedQuote && selectedQuote.status === "Approved" && (
+              <button
+                onClick={() => {
+                  setShowDetailsModal(false);
+                  handleCreateProformaInvoice(selectedQuote);
+                }}
+                className="px-4 py-2 text-sm text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors flex items-center gap-2"
+              >
+                <Receipt className="w-4 h-4" />
+                Create Proforma Invoice
+              </button>
             )}
           </FormFooter>
         </FormModal>

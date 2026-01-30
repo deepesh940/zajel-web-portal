@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   DollarSign,
   Send,
@@ -222,7 +222,7 @@ export default function CustomerInvoicing() {
   ]);
 
   // Filter options for advanced search
-  const filterOptions: FilterCondition[] = [
+  const filterOptions: any[] = [
     {
       id: "status",
       label: "Status",
@@ -312,15 +312,14 @@ export default function CustomerInvoicing() {
     return (
       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
         <div
-          className={`w-1.5 h-1.5 rounded-full ${
-            getStatusColor(status) === "success"
-              ? "bg-success-500"
-              : getStatusColor(status) === "info"
+          className={`w-1.5 h-1.5 rounded-full ${getStatusColor(status) === "success"
+            ? "bg-success-500"
+            : getStatusColor(status) === "info"
               ? "bg-info-500"
               : getStatusColor(status) === "error"
-              ? "bg-error-500"
-              : "bg-neutral-400"
-          }`}
+                ? "bg-error-500"
+                : "bg-neutral-400"
+            }`}
         ></div>
         <span className="text-xs text-neutral-600 dark:text-neutral-400">{status}</span>
       </span>
@@ -420,6 +419,46 @@ export default function CustomerInvoicing() {
     .filter((i) => i.status !== "Paid" && i.status !== "Cancelled")
     .reduce((sum, inv) => sum + inv.balanceDue, 0);
 
+  // Handle pending invoice draft from Trip Monitoring or Proforma from Pricing Hub
+  useEffect(() => {
+    const invoiceDraftStr = localStorage.getItem("pendingInvoiceDraft");
+    const proformaDraftStr = localStorage.getItem("pendingProformaDraft");
+
+    if (invoiceDraftStr) {
+      try {
+        const draft = JSON.parse(invoiceDraftStr);
+        setNewCustomerName(draft.customerName || "");
+        setNewPaymentTerms("Net 15");
+        setNewNotes(`Invoice for Trip: ${draft.tripNumber || ""}\nInquiry: ${draft.inquiryNumber || ""}\n${draft.description || ""}`);
+
+        // Clear draft after reading
+        localStorage.removeItem("pendingInvoiceDraft");
+
+        // Open modal
+        setShowCreateModal(true);
+        toast.info("Invoice pre-filled from trip details");
+      } catch (e) {
+        console.error("Failed to parse invoice draft", e);
+      }
+    } else if (proformaDraftStr) {
+      try {
+        const draft = JSON.parse(proformaDraftStr);
+        setNewCustomerName(draft.customerName || "");
+        setNewPaymentTerms("Due on Receipt");
+        setNewNotes(`PROFORMA INVOICE\nReference: ${draft.quoteNumber || draft.inquiryNumber}\n${draft.description || ""}\nAmount: AED ${draft.amount?.toLocaleString()}`);
+
+        // Clear draft after reading
+        localStorage.removeItem("pendingProformaDraft");
+
+        // Open modal
+        setShowCreateModal(true);
+        toast.info("Proforma invoice pre-filled from quotation");
+      } catch (e) {
+        console.error("Failed to parse proforma draft", e);
+      }
+    }
+  }, []);
+
   return (
     <div className="px-6 py-8 bg-white dark:bg-neutral-950">
       <div className="max-w-[100%] mx-auto">
@@ -489,7 +528,7 @@ export default function CustomerInvoicing() {
               onClose={() => setShowAdvancedSearch(false)}
               filters={filters}
               onFiltersChange={setFilters}
-              filterOptions={filterOptions}
+              filterOptions={filterOptions as any}
             />
           </div>
 
@@ -528,7 +567,7 @@ export default function CustomerInvoicing() {
         {showSummary && (
           <>
             <SummaryWidgets widgets={stats} />
-            
+
             {/* Revenue Summary */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div className="bg-success-50 dark:bg-success-900/30 border border-success-200 dark:border-success-800 rounded-lg p-6">

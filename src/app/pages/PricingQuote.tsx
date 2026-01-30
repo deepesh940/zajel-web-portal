@@ -18,6 +18,7 @@ import {
   Plus,
   Minus,
   MessageSquare,
+  Receipt,
 } from "lucide-react";
 import {
   PageHeader,
@@ -383,6 +384,26 @@ export default function PricingQuote() {
     setOpenActionMenuId(null);
   };
 
+  const handleCreateProformaInvoice = (request: QuoteRequest) => {
+    const draft = {
+      customerName: request.customerName,
+      inquiryNumber: request.inquiryNumber,
+      tripNumber: "",
+      quoteNumber: request.id,
+      amount: request.quote?.totalAmount || 0,
+      description: `Proforma Invoice for Approved Quote ${request.inquiryNumber}\nService: ${request.serviceType}\nFrom: ${request.pickupLocation}\nTo: ${request.deliveryLocation}`,
+      type: "Proforma"
+    };
+
+    localStorage.setItem("pendingProformaDraft", JSON.stringify(draft));
+
+    // Dispatch custom navigation event
+    const event = new CustomEvent('navigate', { detail: 'customer-invoicing' });
+    window.dispatchEvent(event);
+
+    toast.success("Draft proforma invoice created. Redirecting to billing...");
+  };
+
   const handleViewDetails = (request: QuoteRequest) => {
     setSelectedRequest(request);
     setShowViewModal(true);
@@ -499,7 +520,7 @@ export default function PricingQuote() {
               onClose={() => setShowAdvancedSearch(false)}
               filters={filters}
               onFiltersChange={setFilters}
-              filterOptions={filterOptions}
+              filterOptions={filterOptions as any}
             />
           </div>
 
@@ -801,6 +822,18 @@ export default function PricingQuote() {
                                   Negotiate
                                 </button>
                               )}
+                              {request.status === "Quote Approved" && (
+                                <button
+                                  onClick={() => {
+                                    handleCreateProformaInvoice(request);
+                                    setOpenActionMenuId(null);
+                                  }}
+                                  className="w-full px-4 py-2.5 text-left text-sm text-primary-600 dark:text-primary-400 font-medium hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors flex items-center gap-2 border-t border-neutral-200 dark:border-neutral-800"
+                                >
+                                  <Receipt className="w-4 h-4" />
+                                  Create Proforma Invoice
+                                </button>
+                              )}
                               <button
                                 onClick={() => {
                                   handleCopyInquiryNumber(request.inquiryNumber);
@@ -1018,6 +1051,18 @@ export default function PricingQuote() {
                                       Send Quote
                                     </button>
                                   </>
+                                )}
+                                {request.status === "Quote Approved" && (
+                                  <button
+                                    onClick={() => {
+                                      handleCreateProformaInvoice(request);
+                                      setOpenActionMenuId(null);
+                                    }}
+                                    className="w-full px-4 py-2.5 text-left text-sm text-primary-600 dark:text-primary-400 font-medium hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors flex items-center gap-2 border-t border-neutral-200 dark:border-neutral-800"
+                                  >
+                                    <Receipt className="w-4 h-4" />
+                                    Create Proforma Invoice
+                                  </button>
                                 )}
                                 <button
                                   onClick={() => {
@@ -1427,6 +1472,17 @@ export default function PricingQuote() {
           </div>
 
           <FormFooter>
+            {selectedRequest.status === "Quote Approved" && (
+              <PrimaryButton
+                onClick={() => {
+                  setShowViewModal(false);
+                  handleCreateProformaInvoice(selectedRequest);
+                }}
+                icon={Receipt}
+              >
+                Create Proforma Invoice
+              </PrimaryButton>
+            )}
             <SecondaryButton onClick={() => setShowViewModal(false)}>
               Close
             </SecondaryButton>

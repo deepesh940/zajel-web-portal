@@ -21,6 +21,7 @@ import {
   Flag,
   XCircle,
   Plus,
+  Receipt,
 } from "lucide-react";
 import {
   PageHeader,
@@ -54,6 +55,14 @@ interface TripStatus {
   completed: boolean;
 }
 
+interface Driver {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  vehicleNumber: string;
+}
+
 interface Trip {
   id: string;
   tripNumber: string;
@@ -67,6 +76,7 @@ interface Trip {
   currentLocation: string;
   pickupDate: string;
   deliveryDate: string;
+  assignedDriver?: Driver;
   status: "In Transit" | "Pickup Completed" | "Delivery In Progress" | "Delivered" | "Delayed";
   progress: number;
   totalDistance: string;
@@ -74,6 +84,16 @@ interface Trip {
   estimatedArrival: string;
   timeline: TripStatus[];
   pod?: PODData;
+}
+
+interface Inquiry {
+  id: string;
+  inquiryNumber: string;
+  customerName: string;
+  serviceType: string;
+  from: string;
+  to: string;
+  pickupDate: string;
 }
 
 type ViewMode = "grid" | "list" | "table";
@@ -89,6 +109,50 @@ export default function TripMonitoring() {
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [filters, setFilters] = useState<FilterCondition[]>([]);
+
+  // Add Trip Form State
+  const [selectedAddInquiryId, setSelectedAddInquiryId] = useState("");
+  const [addTripNumber, setAddTripNumber] = useState("");
+  const [addCustomerName, setAddCustomerName] = useState("");
+  const [addDriverId, setAddDriverId] = useState("");
+  const [addVehicleNumber, setAddVehicleNumber] = useState("");
+  const [addFromLocation, setAddFromLocation] = useState("");
+  const [addToLocation, setAddToLocation] = useState("");
+  const [addPickupTime, setAddPickupTime] = useState("");
+  const [addDeliveryTime, setAddDeliveryTime] = useState("");
+  const [addDistance, setAddDistance] = useState("");
+  const [addStatus, setAddStatus] = useState("In Transit");
+  const [addNotes, setAddNotes] = useState("");
+
+  const sampleInquiries: Inquiry[] = [
+    {
+      id: "INQ-001",
+      inquiryNumber: "INQ-2024-8801",
+      customerName: "Global Trade Co",
+      serviceType: "FTL - Full Truck Load",
+      from: "Abu Dhabi Port",
+      to: "Dubai Logistics City",
+      pickupDate: "2024-02-01",
+    },
+    {
+      id: "INQ-002",
+      inquiryNumber: "INQ-2024-8802",
+      customerName: "Tech Solutions FZ",
+      serviceType: "LTL - Less than Truck Load",
+      from: "Sharjah Airport",
+      to: "Fujairah Free Zone",
+      pickupDate: "2024-02-02",
+    },
+    {
+      id: "INQ-003",
+      inquiryNumber: "INQ-2024-8803",
+      customerName: "Retail Giants LLC",
+      serviceType: "Express Delivery",
+      from: "Jebel Ali, Dubai",
+      to: "Al Ain Mall",
+      pickupDate: "2024-02-03",
+    }
+  ];
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -306,7 +370,7 @@ export default function TripMonitoring() {
   ]);
 
   // Filter options for advanced search
-  const filterOptions: FilterCondition[] = [
+  const filterOptions: any[] = [
     {
       id: "status",
       label: "Status",
@@ -407,15 +471,14 @@ export default function TripMonitoring() {
     return (
       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
         <div
-          className={`w-1.5 h-1.5 rounded-full ${
-            getStatusColor(status) === "success"
-              ? "bg-success-500"
-              : getStatusColor(status) === "warning"
+          className={`w-1.5 h-1.5 rounded-full ${getStatusColor(status) === "success"
+            ? "bg-success-500"
+            : getStatusColor(status) === "warning"
               ? "bg-warning-500"
               : getStatusColor(status) === "info"
-              ? "bg-info-500"
-              : "bg-neutral-400"
-          }`}
+                ? "bg-info-500"
+                : "bg-neutral-400"
+            }`}
         ></div>
         <span className="text-xs text-neutral-600 dark:text-neutral-400">{status}</span>
       </span>
@@ -446,7 +509,6 @@ export default function TripMonitoring() {
     setShowPODModal(true);
     setOpenActionMenuId(null);
   };
-
   const handlePODSubmit = (podData: PODData) => {
     if (selectedTrip) {
       toast.success(`POD submitted successfully for ${selectedTrip.tripNumber}`);
@@ -454,6 +516,24 @@ export default function TripMonitoring() {
       setSelectedTrip(null);
       // In real app, this would update the trip with POD data
     }
+  };
+
+  const handleCreateInvoice = (trip: Trip) => {
+    const draft = {
+      customerName: trip.customerName,
+      inquiryNumber: trip.inquiryNumber,
+      tripNumber: trip.tripNumber,
+      amount: 1200,
+      description: `Delivery from ${trip.pickupLocation} to ${trip.deliveryLocation}`
+    };
+
+    localStorage.setItem("pendingInvoiceDraft", JSON.stringify(draft));
+
+    // Dispatch custom navigation event
+    const event = new CustomEvent('navigate', { detail: 'customer-invoicing' });
+    window.dispatchEvent(event);
+
+    toast.success("Draft invoice created. Redirecting to billing...");
   };
 
   const formatTimestamp = (timestamp: string) => {
@@ -468,12 +548,50 @@ export default function TripMonitoring() {
   };
 
   const handleAddNew = () => {
+    setSelectedAddInquiryId("");
+    setAddTripNumber(`TRP-2024-0${trips.length + 1}`);
+    setAddCustomerName("");
+    setAddDriverId("");
+    setAddVehicleNumber("");
+    setAddFromLocation("");
+    setAddToLocation("");
+    setAddPickupTime("");
+    setAddDeliveryTime("");
+    setAddDistance("");
+    setAddStatus("In Transit");
+    setAddNotes("");
     setShowAddModal(true);
+  };
+
+  const handleInquiryChange = (inquiryId: string) => {
+    setSelectedAddInquiryId(inquiryId);
+    const inquiry = sampleInquiries.find(i => i.id === inquiryId);
+    if (inquiry) {
+      setAddCustomerName(inquiry.customerName);
+      setAddFromLocation(inquiry.from);
+      setAddToLocation(inquiry.to);
+      setAddPickupTime(`${inquiry.pickupDate}T09:00`);
+      setAddDeliveryTime(`${inquiry.pickupDate}T17:00`);
+      setAddDistance("120"); // Mock default distance
+
+      // Auto-select first driver (mock)
+      setAddDriverId("1"); // Ahmed Hassan
+      setAddVehicleNumber("DXB-12345");
+    } else {
+      setAddCustomerName("");
+      setAddFromLocation("");
+      setAddToLocation("");
+      setAddPickupTime("");
+      setAddDeliveryTime("");
+      setAddDistance("");
+      setAddDriverId("");
+      setAddVehicleNumber("");
+    }
   };
 
   const handleSubmitNewTrip = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Trip added successfully!");
+    toast.success(`Trip ${addTripNumber} created successfully!`);
     setShowAddModal(false);
   };
 
@@ -574,7 +692,7 @@ export default function TripMonitoring() {
               onClose={() => setShowAdvancedSearch(false)}
               filters={filters}
               onFiltersChange={setFilters}
-              filterOptions={filterOptions}
+              filterOptions={filterOptions as any}
             />
           </div>
 
@@ -693,6 +811,18 @@ export default function TripMonitoring() {
                               <Download className="w-4 h-4" />
                               Download Details
                             </button>
+
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCreateInvoice(trip);
+                                setOpenActionMenuId(null);
+                              }}
+                              className="w-full px-4 py-2.5 text-left text-sm text-primary-600 dark:text-primary-400 font-medium hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors flex items-center gap-2 border-t border-neutral-200 dark:border-neutral-800"
+                            >
+                              <Receipt className="w-4 h-4" />
+                              Create Invoice
+                            </button>
                           </div>
                         )}
                       </div>
@@ -735,13 +865,12 @@ export default function TripMonitoring() {
                     </div>
                     <div className="w-full bg-neutral-200 dark:bg-neutral-800 rounded-full h-2">
                       <div
-                        className={`h-2 rounded-full transition-all ${
-                          trip.status === "Delivered"
-                            ? "bg-success-500"
-                            : trip.status === "Delayed"
+                        className={`h-2 rounded-full transition-all ${trip.status === "Delivered"
+                          ? "bg-success-500"
+                          : trip.status === "Delayed"
                             ? "bg-warning-500"
                             : "bg-info-500"
-                        }`}
+                          }`}
                         style={{ width: `${trip.progress}%` }}
                       />
                     </div>
@@ -825,13 +954,12 @@ export default function TripMonitoring() {
                         </div>
                         <div className="w-full bg-neutral-200 dark:bg-neutral-800 rounded-full h-2">
                           <div
-                            className={`h-2 rounded-full transition-all ${
-                              trip.status === "Delivered"
-                                ? "bg-success-500"
-                                : trip.status === "Delayed"
+                            className={`h-2 rounded-full transition-all ${trip.status === "Delivered"
+                              ? "bg-success-500"
+                              : trip.status === "Delayed"
                                 ? "bg-warning-500"
                                 : "bg-info-500"
-                            }`}
+                              }`}
                             style={{ width: `${trip.progress}%` }}
                           />
                         </div>
@@ -851,7 +979,7 @@ export default function TripMonitoring() {
 
                     <div className="flex items-center gap-3">
                       {getStatusBadge(trip.status)}
-                      
+
                       <div className="relative ml-2">
                         <button
                           onClick={() =>
@@ -864,50 +992,50 @@ export default function TripMonitoring() {
                           <MoreVertical className="w-4 h-4" />
                         </button>
 
-                      {openActionMenuId === trip.id && (
-                        <div className="absolute right-0 top-full mt-1 w-56 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg overflow-hidden z-50">
-                          <button
-                            onClick={() => handleViewDetails(trip)}
-                            className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2"
-                          >
-                            <Eye className="w-4 h-4" />
-                            View Details
-                          </button>
+                        {openActionMenuId === trip.id && (
+                          <div className="absolute right-0 top-full mt-1 w-56 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg overflow-hidden z-50">
+                            <button
+                              onClick={() => handleViewDetails(trip)}
+                              className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2"
+                            >
+                              <Eye className="w-4 h-4" />
+                              View Details
+                            </button>
 
-                          <button
-                            onClick={() => {
-                              handleCallDriver(trip);
-                              setOpenActionMenuId(null);
-                            }}
-                            className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2 border-t border-neutral-200 dark:border-neutral-800"
-                          >
-                            <Phone className="w-4 h-4" />
-                            Call Driver
-                          </button>
+                            <button
+                              onClick={() => {
+                                handleCallDriver(trip);
+                                setOpenActionMenuId(null);
+                              }}
+                              className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2 border-t border-neutral-200 dark:border-neutral-800"
+                            >
+                              <Phone className="w-4 h-4" />
+                              Call Driver
+                            </button>
 
-                          <button
-                            onClick={() => {
-                              handleCopyTripNumber(trip.tripNumber);
-                              setOpenActionMenuId(null);
-                            }}
-                            className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2 border-t border-neutral-200 dark:border-neutral-800"
-                          >
-                            <Copy className="w-4 h-4" />
-                            Copy Trip Number
-                          </button>
+                            <button
+                              onClick={() => {
+                                handleCopyTripNumber(trip.tripNumber);
+                                setOpenActionMenuId(null);
+                              }}
+                              className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2 border-t border-neutral-200 dark:border-neutral-800"
+                            >
+                              <Copy className="w-4 h-4" />
+                              Copy Trip Number
+                            </button>
 
-                          <button
-                            onClick={() => {
-                              handleDownloadTrip(trip);
-                              setOpenActionMenuId(null);
-                            }}
-                            className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2"
-                          >
-                            <Download className="w-4 h-4" />
-                            Download Details
-                          </button>
-                        </div>
-                      )}
+                            <button
+                              onClick={() => {
+                                handleDownloadTrip(trip);
+                                setOpenActionMenuId(null);
+                              }}
+                              className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2"
+                            >
+                              <Download className="w-4 h-4" />
+                              Download Details
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1006,13 +1134,12 @@ export default function TripMonitoring() {
                             </div>
                             <div className="w-full bg-neutral-200 dark:bg-neutral-800 rounded-full h-1.5">
                               <div
-                                className={`h-1.5 rounded-full ${
-                                  trip.status === "Delivered"
-                                    ? "bg-success-500"
-                                    : trip.status === "Delayed"
+                                className={`h-1.5 rounded-full ${trip.status === "Delivered"
+                                  ? "bg-success-500"
+                                  : trip.status === "Delayed"
                                     ? "bg-warning-500"
                                     : "bg-info-500"
-                                }`}
+                                  }`}
                                 style={{ width: `${trip.progress}%` }}
                               />
                             </div>
@@ -1187,13 +1314,12 @@ export default function TripMonitoring() {
                 </div>
                 <div className="w-full bg-neutral-200 dark:bg-neutral-800 rounded-full h-3 mb-4">
                   <div
-                    className={`h-3 rounded-full ${
-                      selectedTrip.status === "Delivered"
-                        ? "bg-success-500"
-                        : selectedTrip.status === "Delayed"
+                    className={`h-3 rounded-full ${selectedTrip.status === "Delivered"
+                      ? "bg-success-500"
+                      : selectedTrip.status === "Delayed"
                         ? "bg-warning-500"
                         : "bg-info-500"
-                    }`}
+                      }`}
                     style={{ width: `${selectedTrip.progress}%` }}
                   />
                 </div>
@@ -1272,8 +1398,8 @@ export default function TripMonitoring() {
                 <h4 className="text-sm font-semibold text-neutral-900 dark:text-white mb-4">
                   Trip Timeline
                 </h4>
-                <MilestoneTimeline 
-                  timeline={selectedTrip.timeline} 
+                <MilestoneTimeline
+                  timeline={selectedTrip.timeline}
                   variant="vertical"
                   showLocation={true}
                 />
@@ -1334,15 +1460,51 @@ export default function TripMonitoring() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField>
                     <FormLabel htmlFor="tripNumber" required>Trip Number</FormLabel>
-                    <FormInput id="tripNumber" type="text" required placeholder="TRIP-2024-XXXX" />
+                    <FormInput
+                      id="tripNumber"
+                      type="text"
+                      required
+                      placeholder="TRIP-2024-XXXX"
+                      value={addTripNumber}
+                      onChange={(e) => setAddTripNumber(e.target.value)}
+                    />
                   </FormField>
                   <FormField>
-                    <FormLabel htmlFor="inquiryNumber" required>Inquiry Number</FormLabel>
-                    <FormInput id="inquiryNumber" type="text" required placeholder="INQ-2024-XXXX" />
+                    <FormLabel htmlFor="inquiryId" required>Select Inquiry</FormLabel>
+                    <FormSelect
+                      id="inquiryId"
+                      required
+                      value={selectedAddInquiryId}
+                      onChange={(e) => handleInquiryChange(e.target.value)}
+                    >
+                      <option value="">Choose an inquiry</option>
+                      {sampleInquiries.map((inquiry) => (
+                        <option key={inquiry.id} value={inquiry.id}>
+                          {inquiry.inquiryNumber} - {inquiry.customerName}
+                        </option>
+                      ))}
+                    </FormSelect>
+                  </FormField>
+                  <FormField>
+                    <FormLabel htmlFor="customerName" required>Customer Name</FormLabel>
+                    <FormInput
+                      id="customerName"
+                      type="text"
+                      required
+                      value={addCustomerName}
+                      onChange={(e) => setAddCustomerName(e.target.value)}
+                      readOnly
+                      className="bg-neutral-50 dark:bg-neutral-800"
+                    />
                   </FormField>
                   <FormField>
                     <FormLabel htmlFor="driver" required>Assigned Driver</FormLabel>
-                    <FormSelect id="driver" required>
+                    <FormSelect
+                      id="driver"
+                      required
+                      value={addDriverId}
+                      onChange={(e) => setAddDriverId(e.target.value)}
+                    >
                       <option value="">Select driver</option>
                       <option value="1">Ahmed Hassan</option>
                       <option value="2">Mohammed Ali</option>
@@ -1351,7 +1513,14 @@ export default function TripMonitoring() {
                   </FormField>
                   <FormField>
                     <FormLabel htmlFor="vehicle" required>Vehicle</FormLabel>
-                    <FormInput id="vehicle" type="text" required placeholder="ABC-1234" />
+                    <FormInput
+                      id="vehicle"
+                      type="text"
+                      required
+                      placeholder="ABC-1234"
+                      value={addVehicleNumber}
+                      onChange={(e) => setAddVehicleNumber(e.target.value)}
+                    />
                   </FormField>
                 </div>
               </div>
@@ -1364,28 +1533,67 @@ export default function TripMonitoring() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField>
                     <FormLabel htmlFor="from" required>From Location</FormLabel>
-                    <FormInput id="from" type="text" required placeholder="Dubai, UAE" />
+                    <FormInput
+                      id="from"
+                      type="text"
+                      required
+                      placeholder="Dubai, UAE"
+                      value={addFromLocation}
+                      onChange={(e) => setAddFromLocation(e.target.value)}
+                    />
                   </FormField>
                   <FormField>
                     <FormLabel htmlFor="to" required>To Location</FormLabel>
-                    <FormInput id="to" type="text" required placeholder="Abu Dhabi, UAE" />
+                    <FormInput
+                      id="to"
+                      type="text"
+                      required
+                      placeholder="Abu Dhabi, UAE"
+                      value={addToLocation}
+                      onChange={(e) => setAddToLocation(e.target.value)}
+                    />
                   </FormField>
                   <FormField>
                     <FormLabel htmlFor="pickupTime" required>Pickup Time</FormLabel>
-                    <FormInput id="pickupTime" type="datetime-local" required />
+                    <FormInput
+                      id="pickupTime"
+                      type="datetime-local"
+                      required
+                      value={addPickupTime}
+                      onChange={(e) => setAddPickupTime(e.target.value)}
+                    />
                   </FormField>
                   <FormField>
                     <FormLabel htmlFor="deliveryTime" required>Estimated Delivery</FormLabel>
-                    <FormInput id="deliveryTime" type="datetime-local" required />
+                    <FormInput
+                      id="deliveryTime"
+                      type="datetime-local"
+                      required
+                      value={addDeliveryTime}
+                      onChange={(e) => setAddDeliveryTime(e.target.value)}
+                    />
                   </FormField>
                   <FormField>
                     <FormLabel htmlFor="distance" required>Distance (km)</FormLabel>
-                    <FormInput id="distance" type="number" required placeholder="0" step="0.1" min="0" />
+                    <FormInput
+                      id="distance"
+                      type="number"
+                      required
+                      placeholder="0"
+                      step="0.1"
+                      min="0"
+                      value={addDistance}
+                      onChange={(e) => setAddDistance(e.target.value)}
+                    />
                   </FormField>
                   <FormField>
                     <FormLabel htmlFor="status" required>Status</FormLabel>
-                    <FormSelect id="status" required>
-                      <option value="">Select status</option>
+                    <FormSelect
+                      id="status"
+                      required
+                      value={addStatus}
+                      onChange={(e) => setAddStatus(e.target.value)}
+                    >
                       <option value="Scheduled">Scheduled</option>
                       <option value="In Transit">In Transit</option>
                       <option value="Delivered">Delivered</option>
@@ -1397,7 +1605,13 @@ export default function TripMonitoring() {
               {/* Notes */}
               <FormField>
                 <FormLabel htmlFor="notes">Trip Notes</FormLabel>
-                <FormTextarea id="notes" placeholder="Special instructions or remarks..." rows={2} />
+                <FormTextarea
+                  id="notes"
+                  placeholder="Special instructions or remarks..."
+                  rows={2}
+                  value={addNotes}
+                  onChange={(e) => setAddNotes(e.target.value)}
+                />
               </FormField>
             </div>
 

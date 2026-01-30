@@ -82,6 +82,13 @@ const getCustomerMenu = (
       active: currentPage === "notifications",
     },
     {
+      id: "escalations",
+      label: "My Escalations",
+      icon: AlertTriangle,
+      onClick: () => onNavigate("escalation-management"),
+      active: currentPage === "escalation-management",
+    },
+    {
       id: "profile",
       label: "Profile",
       icon: Users,
@@ -405,7 +412,6 @@ const getAdminMenu = (
         {
           id: "receivables",
           label: "Receivables",
-          icon: DollarSign,
           onClick: () => onNavigate("receivables"),
           active: currentPage === "receivables",
         },
@@ -532,26 +538,6 @@ const getAdminMenu = (
       active: currentPage === "profile",
     },
 
-    // HB Templates Section
-    {
-      id: "hb-templates",
-      label: "HB Templates",
-      icon: Palette,
-      subItems: [
-        {
-          id: "ui-kit",
-          label: "UI Kit",
-          onClick: () => onNavigate("ui-kit"),
-          active: currentPage === "ui-kit",
-        },
-        {
-          id: "sample-design",
-          label: "Sample Page",
-          onClick: () => onNavigate("sample-design"),
-          active: currentPage === "sample-design",
-        },
-      ],
-    },
   ];
 };
 

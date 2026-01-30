@@ -19,6 +19,7 @@ import {
   RefreshCw,
   Activity,
   UserCheck,
+  Plus,
 } from "lucide-react";
 import {
   PageHeader,
@@ -48,12 +49,12 @@ interface Escalation {
   title: string;
   description: string;
   category:
-    | "Pricing Issue"
-    | "SLA Breach"
-    | "Customer Complaint"
-    | "Operational Delay"
-    | "Quality Issue"
-    | "Driver Issue";
+  | "Pricing Issue"
+  | "SLA Breach"
+  | "Customer Complaint"
+  | "Operational Delay"
+  | "Quality Issue"
+  | "Driver Issue";
   severity: "Critical" | "High" | "Medium" | "Low";
   status: "Open" | "In Progress" | "Resolved" | "Closed";
   relatedInquiry?: string;
@@ -74,13 +75,19 @@ interface Escalation {
 
 type ViewMode = "grid" | "list" | "table";
 
-export default function EscalationManagement() {
+interface EscalationManagementProps {
+  userRole?: string;
+}
+
+export default function EscalationManagement({ userRole = "admin" }: EscalationManagementProps) {
+  const isCustomer = userRole === "customer";
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEscalation, setSelectedEscalation] = useState<Escalation | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showResolveModal, setShowResolveModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [assignedUser, setAssignedUser] = useState("");
   const [resolution, setResolution] = useState("");
@@ -89,6 +96,15 @@ export default function EscalationManagement() {
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [filters, setFilters] = useState<FilterCondition[]>([]);
+
+  // Create Escalation Form State
+  const [newEscalation, setNewEscalation] = useState({
+    title: "",
+    description: "",
+    category: "Customer Complaint" as Escalation["category"],
+    severity: "Medium" as Escalation["severity"],
+    relatedInquiry: "",
+  });
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -261,69 +277,55 @@ export default function EscalationManagement() {
     },
   ]);
 
-  // Filter options for advanced search
-  const filterOptions: FilterCondition[] = [
-    {
-      id: "status",
-      label: "Status",
-      type: "select",
-      values: [],
-      options: [
-        { value: "Open", label: "Open" },
-        { value: "In Progress", label: "In Progress" },
-        { value: "Resolved", label: "Resolved" },
-        { value: "Closed", label: "Closed" },
-      ],
-    },
-    {
-      id: "severity",
-      label: "Severity",
-      type: "select",
-      values: [],
-      options: [
-        { value: "Critical", label: "Critical" },
-        { value: "High", label: "High" },
-        { value: "Medium", label: "Medium" },
-        { value: "Low", label: "Low" },
-      ],
-    },
-    {
-      id: "category",
-      label: "Category",
-      type: "select",
-      values: [],
-      options: [
-        { value: "Pricing Issue", label: "Pricing Issue" },
-        { value: "SLA Breach", label: "SLA Breach" },
-        { value: "Customer Complaint", label: "Customer Complaint" },
-        { value: "Operational Delay", label: "Operational Delay" },
-        { value: "Quality Issue", label: "Quality Issue" },
-        { value: "Driver Issue", label: "Driver Issue" },
-      ],
-    },
-  ];
+  // Filter options for Advanced Search
+  const filterOptionsMap: Record<string, string[]> = {
+    "Status": ["Open", "In Progress", "Resolved", "Closed"],
+    "Severity": ["Critical", "High", "Medium", "Low"],
+    "Category": [
+      "Pricing Issue",
+      "SLA Breach",
+      "Customer Complaint",
+      "Operational Delay",
+      "Quality Issue",
+      "Driver Issue",
+    ],
+  };
 
-  // Apply filters
+  // Filtered escalations
   const filteredEscalations = escalations.filter((escalation) => {
-    const matchesSearch =
-      escalation.escalationNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      escalation.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      escalation.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      escalation.relatedInquiry?.toLowerCase().includes(searchQuery.toLowerCase());
+    // Role based filtering: Customers only see their own escalations
+    if (isCustomer && escalation.customerName !== "John Smith") { // Assuming John Smith is the mock customer
+      return false;
+    }
 
-    const statusFilter = filters.find((f) => f.id === "status");
-    const matchesStatus =
-      !statusFilter || statusFilter.values.length === 0 || statusFilter.values.includes(escalation.status);
+    // Search query filtering
+    if (
+      searchQuery &&
+      !escalation.escalationNumber
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) &&
+      !escalation.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      !escalation.customerName.toLowerCase().includes(searchQuery.toLowerCase())
+    ) {
+      return false;
+    }
 
-    const severityFilter = filters.find((f) => f.id === "severity");
-    const matchesSeverity =
-      !severityFilter || severityFilter.values.length === 0 || severityFilter.values.includes(escalation.severity);
+    // Advanced filters
+    if (filters.length > 0) {
+      for (const filter of filters) {
+        if (filter.values.length === 0) continue;
 
-    const categoryFilter = filters.find((f) => f.id === "category");
-    const matchesCategory =
-      !categoryFilter || categoryFilter.values.length === 0 || categoryFilter.values.includes(escalation.category);
+        if (filter.field === "Status") {
+          if (!filter.values.includes(escalation.status)) return false;
+        } else if (filter.field === "Severity") {
+          if (!filter.values.includes(escalation.severity)) return false;
+        } else if (filter.field === "Category") {
+          if (!filter.values.includes(escalation.category)) return false;
+        }
+      }
+    }
 
-    return matchesSearch && matchesStatus && matchesSeverity && matchesCategory;
+    return true;
   });
 
   // Apply sorting
@@ -370,15 +372,14 @@ export default function EscalationManagement() {
     return (
       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
         <div
-          className={`w-1.5 h-1.5 rounded-full ${
-            getStatusColor(status) === "success"
-              ? "bg-success-500"
-              : getStatusColor(status) === "error"
+          className={`w-1.5 h-1.5 rounded-full ${getStatusColor(status) === "success"
+            ? "bg-success-500"
+            : getStatusColor(status) === "error"
               ? "bg-error-500"
               : getStatusColor(status) === "info"
-              ? "bg-info-500"
-              : "bg-neutral-400"
-          }`}
+                ? "bg-info-500"
+                : "bg-neutral-400"
+            }`}
         ></div>
         <span className="text-xs text-neutral-600 dark:text-neutral-400">{status}</span>
       </span>
@@ -390,10 +391,10 @@ export default function EscalationManagement() {
       severity === "Critical"
         ? "bg-error-100 dark:bg-error-900/30 text-error-700 dark:text-error-400 border-error-200 dark:border-error-800"
         : severity === "High"
-        ? "bg-warning-100 dark:bg-warning-900/30 text-warning-700 dark:text-warning-400 border-warning-200 dark:border-warning-800"
-        : severity === "Medium"
-        ? "bg-info-100 dark:bg-info-900/30 text-info-700 dark:text-info-400 border-info-200 dark:border-info-800"
-        : "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-400 border-neutral-200 dark:border-neutral-700";
+          ? "bg-warning-100 dark:bg-warning-900/30 text-warning-700 dark:text-warning-400 border-warning-200 dark:border-warning-800"
+          : severity === "Medium"
+            ? "bg-info-100 dark:bg-info-900/30 text-info-700 dark:text-info-400 border-info-200 dark:border-info-800"
+            : "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-400 border-neutral-200 dark:border-neutral-700";
 
     return (
       <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded border ${colorClass}`}>
@@ -451,11 +452,11 @@ export default function EscalationManagement() {
         escalations.map((e) =>
           e.id === selectedEscalation.id
             ? {
-                ...e,
-                status: "Resolved",
-                resolution,
-                resolvedDate: new Date().toISOString(),
-              }
+              ...e,
+              status: "Resolved",
+              resolution,
+              resolvedDate: new Date().toISOString(),
+            }
             : e
         )
       );
@@ -493,6 +494,53 @@ export default function EscalationManagement() {
       toast.success("Comment added");
     }
     setShowCommentModal(false);
+  };
+
+  const handleCreateEscalation = () => {
+    setNewEscalation({
+      title: "",
+      description: "",
+      category: "Customer Complaint",
+      severity: "Medium",
+      relatedInquiry: "",
+    });
+    setShowCreateModal(true);
+  };
+
+  const confirmCreateEscalation = () => {
+    if (!newEscalation.title.trim() || !newEscalation.description.trim()) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    const escalation: Escalation = {
+      id: (escalations.length + 1).toString(),
+      escalationNumber: `ESC-2024-${Math.floor(1000 + Math.random() * 9000)}`,
+      title: newEscalation.title,
+      description: newEscalation.description,
+      category: newEscalation.category,
+      severity: newEscalation.severity,
+      status: "Open",
+      customerName: "John Smith", // Mock customer
+      reportedBy: "John Smith",
+      reportedDate: new Date().toISOString(),
+      dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0],
+      relatedInquiry: newEscalation.relatedInquiry,
+      comments: [
+        {
+          id: "1",
+          author: "John Smith",
+          timestamp: new Date().toISOString(),
+          message: "Escalation created.",
+        },
+      ],
+    };
+
+    setEscalations([escalation, ...escalations]);
+    toast.success("Escalation created successfully");
+    setShowCreateModal(false);
   };
 
   const handleCopyEscalationNumber = (escalationNumber: string) => {
@@ -606,7 +654,7 @@ export default function EscalationManagement() {
               onClose={() => setShowAdvancedSearch(false)}
               filters={filters}
               onFiltersChange={setFilters}
-              filterOptions={filterOptions}
+              filterOptions={filterOptionsMap}
             />
           </div>
 
@@ -623,6 +671,16 @@ export default function EscalationManagement() {
             title="Refresh"
           />
 
+          {isCustomer && (
+            <button
+              onClick={handleCreateEscalation}
+              className="px-4 py-2 text-sm text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              New Escalation
+            </button>
+          )}
+
           <ViewModeSwitcher currentMode={viewMode} onChange={setViewMode} />
         </PageHeader>
 
@@ -632,12 +690,12 @@ export default function EscalationManagement() {
             filters={filters}
             onRemove={(filterId) => {
               setFilters(
-                filters.map((f) =>
+                filters.map((f: any) =>
                   f.id === filterId ? { ...f, values: [] } : f
-                )
+                ).filter((f: any) => f.values.length > 0)
               );
             }}
-            onClearAll={() => setFilters(filterOptions.map((f) => ({ ...f, values: [] })))}
+            onClearAll={() => setFilters([])}
           />
         )}
 
@@ -965,34 +1023,6 @@ export default function EscalationManagement() {
             <div className="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
-                        Escalation Number
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
-                        Severity
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
-                        Title
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
-                        Customer
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
-                        Category
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
-                        Assigned To
-                      </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
                   <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
                     {paginatedEscalations.map((escalation) => (
                       <tr
@@ -1187,300 +1217,420 @@ export default function EscalationManagement() {
               onItemsPerPageChange={setItemsPerPage}
             />
           )}
-        </div>
 
-        {/* Details Modal */}
-        <FormModal
-          isOpen={showDetailsModal}
-          onClose={() => setShowDetailsModal(false)}
-          title="Escalation Details"
-          description={selectedEscalation?.escalationNumber}
-          maxWidth="max-w-4xl"
-        >
-          {selectedEscalation && (
-            <div className="space-y-6">
-              {/* Status & Severity */}
-              <div className="flex items-center gap-3">
-                {getStatusBadge(selectedEscalation.status)}
-                {getSeverityBadge(selectedEscalation.severity)}
-              </div>
+          {/* Details Modal */}
+          <FormModal
+            isOpen={showDetailsModal}
+            onClose={() => setShowDetailsModal(false)}
+            title="Escalation Details"
+            description={selectedEscalation?.escalationNumber}
+            maxWidth="max-w-4xl"
+          >
+            {selectedEscalation && (
+              <div className="space-y-6">
+                {/* Status & Severity */}
+                <div className="flex items-center gap-3">
+                  {getStatusBadge(selectedEscalation.status)}
+                  {getSeverityBadge(selectedEscalation.severity)}
+                </div>
 
-              {/* Title */}
-              <div>
-                <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-2">
-                  {selectedEscalation.title}
-                </h3>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                  {selectedEscalation.description}
-                </p>
-              </div>
+                {/* Title */}
+                <div>
+                  <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-2">
+                    {selectedEscalation.title}
+                  </h3>
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                    {selectedEscalation.description}
+                  </p>
+                </div>
 
-              {/* Details Grid */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-neutral-50 dark:bg-neutral-950 rounded-lg">
-                  <p className="text-xs text-neutral-600 dark:text-neutral-400 mb-1">
-                    Customer
-                  </p>
-                  <p className="text-sm font-medium text-neutral-900 dark:text-white">
-                    {selectedEscalation.customerName}
-                  </p>
-                </div>
-                <div className="p-4 bg-neutral-50 dark:bg-neutral-950 rounded-lg">
-                  <p className="text-xs text-neutral-600 dark:text-neutral-400 mb-1">
-                    Category
-                  </p>
-                  <p className="text-sm font-medium text-neutral-900 dark:text-white">
-                    {selectedEscalation.category}
-                  </p>
-                </div>
-                <div className="p-4 bg-neutral-50 dark:bg-neutral-950 rounded-lg">
-                  <p className="text-xs text-neutral-600 dark:text-neutral-400 mb-1">
-                    Reported By
-                  </p>
-                  <p className="text-sm font-medium text-neutral-900 dark:text-white">
-                    {selectedEscalation.reportedBy}
-                  </p>
-                </div>
-                <div className="p-4 bg-neutral-50 dark:bg-neutral-950 rounded-lg">
-                  <p className="text-xs text-neutral-600 dark:text-neutral-400 mb-1">
-                    Assigned To
-                  </p>
-                  <p className="text-sm font-medium text-neutral-900 dark:text-white">
-                    {selectedEscalation.assignedTo || "Not assigned"}
-                  </p>
-                </div>
-              </div>
-
-              {/* Dates */}
-              <div className="grid grid-cols-3 gap-4">
-                <div className="p-4 bg-neutral-50 dark:bg-neutral-950 rounded-lg">
-                  <p className="text-xs text-neutral-600 dark:text-neutral-400 mb-1">
-                    Reported Date
-                  </p>
-                  <p className="text-sm font-medium text-neutral-900 dark:text-white">
-                    {formatTimestamp(selectedEscalation.reportedDate)}
-                  </p>
-                </div>
-                <div className="p-4 bg-neutral-50 dark:bg-neutral-950 rounded-lg">
-                  <p className="text-xs text-neutral-600 dark:text-neutral-400 mb-1">
-                    Due Date
-                  </p>
-                  <p className="text-sm font-medium text-neutral-900 dark:text-white">
-                    {selectedEscalation.dueDate}
-                  </p>
-                </div>
-                {selectedEscalation.resolvedDate && (
-                  <div className="p-4 bg-success-50 dark:bg-success-900/30 rounded-lg border border-success-200 dark:border-success-800">
-                    <p className="text-xs text-success-700 dark:text-success-400 mb-1">
-                      Resolved Date
+                {/* Details Grid */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-neutral-50 dark:bg-neutral-950 rounded-lg">
+                    <p className="text-xs text-neutral-600 dark:text-neutral-400 mb-1">
+                      Customer
                     </p>
-                    <p className="text-sm font-medium text-success-900 dark:text-success-300">
-                      {formatTimestamp(selectedEscalation.resolvedDate)}
+                    <p className="text-sm font-medium text-neutral-900 dark:text-white">
+                      {selectedEscalation.customerName}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-neutral-50 dark:bg-neutral-950 rounded-lg">
+                    <p className="text-xs text-neutral-600 dark:text-neutral-400 mb-1">
+                      Category
+                    </p>
+                    <p className="text-sm font-medium text-neutral-900 dark:text-white">
+                      {selectedEscalation.category}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-neutral-50 dark:bg-neutral-950 rounded-lg">
+                    <p className="text-xs text-neutral-600 dark:text-neutral-400 mb-1">
+                      Reported By
+                    </p>
+                    <p className="text-sm font-medium text-neutral-900 dark:text-white">
+                      {selectedEscalation.reportedBy}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-neutral-50 dark:bg-neutral-950 rounded-lg">
+                    <p className="text-xs text-neutral-600 dark:text-neutral-400 mb-1">
+                      Assigned To
+                    </p>
+                    <p className="text-sm font-medium text-neutral-900 dark:text-white">
+                      {selectedEscalation.assignedTo || "Not assigned"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Dates */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="p-4 bg-neutral-50 dark:bg-neutral-950 rounded-lg">
+                    <p className="text-xs text-neutral-600 dark:text-neutral-400 mb-1">
+                      Reported Date
+                    </p>
+                    <p className="text-sm font-medium text-neutral-900 dark:text-white">
+                      {formatTimestamp(selectedEscalation.reportedDate)}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-neutral-50 dark:bg-neutral-950 rounded-lg">
+                    <p className="text-xs text-neutral-600 dark:text-neutral-400 mb-1">
+                      Due Date
+                    </p>
+                    <p className="text-sm font-medium text-neutral-900 dark:text-white">
+                      {selectedEscalation.dueDate}
+                    </p>
+                  </div>
+                  {selectedEscalation.resolvedDate && (
+                    <div className="p-4 bg-success-50 dark:bg-success-900/30 rounded-lg border border-success-200 dark:border-success-800">
+                      <p className="text-xs text-success-700 dark:text-success-400 mb-1">
+                        Resolved Date
+                      </p>
+                      <p className="text-sm font-medium text-success-900 dark:text-success-300">
+                        {formatTimestamp(selectedEscalation.resolvedDate)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Resolution */}
+                {selectedEscalation.resolution && (
+                  <div className="p-4 bg-success-50 dark:bg-success-900/30 rounded-lg border border-success-200 dark:border-success-800">
+                    <p className="text-xs text-success-700 dark:text-success-400 mb-2 font-semibold">
+                      Resolution
+                    </p>
+                    <p className="text-sm text-success-900 dark:text-success-300">
+                      {selectedEscalation.resolution}
                     </p>
                   </div>
                 )}
-              </div>
 
-              {/* Resolution */}
-              {selectedEscalation.resolution && (
-                <div className="p-4 bg-success-50 dark:bg-success-900/30 rounded-lg border border-success-200 dark:border-success-800">
-                  <p className="text-xs text-success-700 dark:text-success-400 mb-2 font-semibold">
-                    Resolution
-                  </p>
-                  <p className="text-sm text-success-900 dark:text-success-300">
-                    {selectedEscalation.resolution}
-                  </p>
-                </div>
-              )}
-
-              {/* Comments */}
-              <div>
-                <h4 className="text-sm font-semibold text-neutral-900 dark:text-white mb-3 flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4" />
-                  Comments ({selectedEscalation.comments.length})
-                </h4>
-                <div className="space-y-3">
-                  {selectedEscalation.comments.map((comment) => (
-                    <div
-                      key={comment.id}
-                      className="p-4 bg-neutral-50 dark:bg-neutral-950 rounded-lg"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-sm font-medium text-neutral-900 dark:text-white">
-                          {comment.author}
-                        </p>
-                        <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                          {formatTimestamp(comment.timestamp)}
+                {/* Comments */}
+                <div>
+                  <h4 className="text-sm font-semibold text-neutral-900 dark:text-white mb-3 flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4" />
+                    Comments ({selectedEscalation.comments.length})
+                  </h4>
+                  <div className="space-y-3">
+                    {selectedEscalation.comments.map((comment) => (
+                      <div
+                        key={comment.id}
+                        className="p-4 bg-neutral-50 dark:bg-neutral-950 rounded-lg"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-sm font-medium text-neutral-900 dark:text-white">
+                            {comment.author}
+                          </p>
+                          <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                            {formatTimestamp(comment.timestamp)}
+                          </p>
+                        </div>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                          {comment.message}
                         </p>
                       </div>
-                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                        {comment.message}
-                      </p>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
+
+            <FormFooter>
+              <button
+                onClick={() => setShowDetailsModal(false)}
+                className="px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+              >
+                Close
+              </button>
+              {selectedEscalation &&
+                selectedEscalation.status !== "Resolved" &&
+                selectedEscalation.status !== "Closed" && (
+                  <>
+                    <button
+                      onClick={() => {
+                        setShowDetailsModal(false);
+                        handleAddComment(selectedEscalation);
+                      }}
+                      className="px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors flex items-center gap-2"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      Add Comment
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowDetailsModal(false);
+                        handleResolve(selectedEscalation);
+                      }}
+                      className="px-4 py-2 text-sm text-white bg-success-500 hover:bg-success-600 rounded-lg transition-colors flex items-center gap-2"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      Resolve
+                    </button>
+                  </>
+                )}
+            </FormFooter>
+          </FormModal>
+
+          {/* Assign Modal */}
+          {selectedEscalation && (
+            <FormModal
+              isOpen={showAssignModal}
+              onClose={() => setShowAssignModal(false)}
+              title="Assign Escalation"
+              description={`${selectedEscalation.escalationNumber} - ${selectedEscalation.title}`}
+            >
+              <div className="space-y-4">
+                <FormField>
+                  <FormLabel htmlFor="assignedUser" required>
+                    Assign To
+                  </FormLabel>
+                  <FormInput
+                    id="assignedUser"
+                    type="text"
+                    value={assignedUser}
+                    onChange={(e) => setAssignedUser(e.target.value)}
+                    placeholder="Enter name or team"
+                  />
+                </FormField>
+              </div>
+
+              <FormFooter>
+                <button
+                  onClick={() => setShowAssignModal(false)}
+                  className="px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmAssign}
+                  className="px-4 py-2 text-sm text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors flex items-center gap-2"
+                >
+                  <UserCheck className="w-4 h-4" />
+                  Assign
+                </button>
+              </FormFooter>
+            </FormModal>
           )}
 
-          <FormFooter>
-            <button
-              onClick={() => setShowDetailsModal(false)}
-              className="px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+          {/* Resolve Modal */}
+          {selectedEscalation && (
+            <FormModal
+              isOpen={showResolveModal}
+              onClose={() => setShowResolveModal(false)}
+              title="Resolve Escalation"
+              description={`${selectedEscalation.escalationNumber} - ${selectedEscalation.title}`}
             >
-              Close
-            </button>
-            {selectedEscalation &&
-              selectedEscalation.status !== "Resolved" &&
-              selectedEscalation.status !== "Closed" && (
-                <>
-                  <button
-                    onClick={() => {
-                      setShowDetailsModal(false);
-                      handleAddComment(selectedEscalation);
-                    }}
-                    className="px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors flex items-center gap-2"
-                  >
-                    <MessageSquare className="w-4 h-4" />
-                    Add Comment
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowDetailsModal(false);
-                      handleResolve(selectedEscalation);
-                    }}
-                    className="px-4 py-2 text-sm text-white bg-success-500 hover:bg-success-600 rounded-lg transition-colors flex items-center gap-2"
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                    Resolve
-                  </button>
-                </>
-              )}
-          </FormFooter>
-        </FormModal>
+              <div className="space-y-4">
+                <FormField>
+                  <FormLabel htmlFor="resolution" required>
+                    Resolution Details
+                  </FormLabel>
+                  <FormTextarea
+                    id="resolution"
+                    rows={5}
+                    value={resolution}
+                    onChange={(e) => setResolution(e.target.value)}
+                    placeholder="Describe how this escalation was resolved..."
+                  />
+                </FormField>
+              </div>
 
-        {/* Assign Modal */}
-        {selectedEscalation && (
+              <FormFooter>
+                <button
+                  onClick={() => setShowResolveModal(false)}
+                  className="px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmResolve}
+                  className="px-4 py-2 text-sm text-white bg-success-500 hover:bg-success-600 rounded-lg transition-colors flex items-center gap-2"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  Mark as Resolved
+                </button>
+              </FormFooter>
+            </FormModal>
+          )}
+
+          {/* Add Comment Modal */}
+          {selectedEscalation && (
+            <FormModal
+              isOpen={showCommentModal}
+              onClose={() => setShowCommentModal(false)}
+              title="Add Comment"
+              description={`${selectedEscalation.escalationNumber} - ${selectedEscalation.title}`}
+            >
+              <div className="space-y-4">
+                <FormField>
+                  <FormLabel htmlFor="comment" required>
+                    Comment
+                  </FormLabel>
+                  <FormTextarea
+                    id="comment"
+                    rows={4}
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Add a comment or update..."
+                  />
+                </FormField>
+              </div>
+
+              <FormFooter>
+                <button
+                  onClick={() => setShowCommentModal(false)}
+                  className="px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmAddComment}
+                  className="px-4 py-2 text-sm text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors flex items-center gap-2"
+                >
+                  <Send className="w-4 h-4" />
+                  Add Comment
+                </button>
+              </FormFooter>
+            </FormModal>
+          )}
+
+          {/* Create Escalation Modal */}
           <FormModal
-            isOpen={showAssignModal}
-            onClose={() => setShowAssignModal(false)}
-            title="Assign Escalation"
-            description={`${selectedEscalation.escalationNumber} - ${selectedEscalation.title}`}
+            isOpen={showCreateModal}
+            onClose={() => setShowCreateModal(false)}
+            title="Create New Escalation"
+            description="Report a new critical issue or complaint"
           >
             <div className="space-y-4">
               <FormField>
-                <FormLabel htmlFor="assignedUser" required>
-                  Assign To
+                <FormLabel htmlFor="title" required>
+                  Title
                 </FormLabel>
                 <FormInput
-                  id="assignedUser"
+                  id="title"
                   type="text"
-                  value={assignedUser}
-                  onChange={(e) => setAssignedUser(e.target.value)}
-                  placeholder="Enter name or team"
+                  value={newEscalation.title}
+                  onChange={(e) =>
+                    setNewEscalation({ ...newEscalation, title: e.target.value })
+                  }
+                  placeholder="Brief summary of the issue"
                 />
               </FormField>
-            </div>
 
-            <FormFooter>
-              <button
-                onClick={() => setShowAssignModal(false)}
-                className="px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmAssign}
-                className="px-4 py-2 text-sm text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors flex items-center gap-2"
-              >
-                <UserCheck className="w-4 h-4" />
-                Assign
-              </button>
-            </FormFooter>
-          </FormModal>
-        )}
+              <div className="grid grid-cols-2 gap-4">
+                <FormField>
+                  <FormLabel htmlFor="category" required>
+                    Category
+                  </FormLabel>
+                  <FormSelect
+                    id="category"
+                    value={newEscalation.category}
+                    onChange={(e) =>
+                      setNewEscalation({
+                        ...newEscalation,
+                        category: e.target.value as Escalation["category"],
+                      })
+                    }
+                  >
+                    {filterOptionsMap.Category.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </FormSelect>
+                </FormField>
 
-        {/* Resolve Modal */}
-        {selectedEscalation && (
-          <FormModal
-            isOpen={showResolveModal}
-            onClose={() => setShowResolveModal(false)}
-            title="Resolve Escalation"
-            description={`${selectedEscalation.escalationNumber} - ${selectedEscalation.title}`}
-          >
-            <div className="space-y-4">
+                <FormField>
+                  <FormLabel htmlFor="severity" required>
+                    Severity
+                  </FormLabel>
+                  <FormSelect
+                    id="severity"
+                    value={newEscalation.severity}
+                    onChange={(e) =>
+                      setNewEscalation({
+                        ...newEscalation,
+                        severity: e.target.value as Escalation["severity"],
+                      })
+                    }
+                  >
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                    <option value="Critical">Critical</option>
+                  </FormSelect>
+                </FormField>
+              </div>
+
               <FormField>
-                <FormLabel htmlFor="resolution" required>
-                  Resolution Details
-                </FormLabel>
-                <FormTextarea
-                  id="resolution"
-                  rows={5}
-                  value={resolution}
-                  onChange={(e) => setResolution(e.target.value)}
-                  placeholder="Describe how this escalation was resolved..."
+                <FormLabel htmlFor="relatedInquiry">Related Inquiry (Optional)</FormLabel>
+                <FormInput
+                  id="relatedInquiry"
+                  type="text"
+                  value={newEscalation.relatedInquiry}
+                  onChange={(e) =>
+                    setNewEscalation({
+                      ...newEscalation,
+                      relatedInquiry: e.target.value,
+                    })
+                  }
+                  placeholder="e.g., INQ-2024-1234"
                 />
               </FormField>
-            </div>
 
-            <FormFooter>
-              <button
-                onClick={() => setShowResolveModal(false)}
-                className="px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmResolve}
-                className="px-4 py-2 text-sm text-white bg-success-500 hover:bg-success-600 rounded-lg transition-colors flex items-center gap-2"
-              >
-                <CheckCircle className="w-4 h-4" />
-                Mark as Resolved
-              </button>
-            </FormFooter>
-          </FormModal>
-        )}
-
-        {/* Add Comment Modal */}
-        {selectedEscalation && (
-          <FormModal
-            isOpen={showCommentModal}
-            onClose={() => setShowCommentModal(false)}
-            title="Add Comment"
-            description={`${selectedEscalation.escalationNumber} - ${selectedEscalation.title}`}
-          >
-            <div className="space-y-4">
               <FormField>
-                <FormLabel htmlFor="comment" required>
-                  Comment
+                <FormLabel htmlFor="description" required>
+                  Description
                 </FormLabel>
                 <FormTextarea
-                  id="comment"
+                  id="description"
                   rows={4}
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Add a comment or update..."
+                  value={newEscalation.description}
+                  onChange={(e) =>
+                    setNewEscalation({
+                      ...newEscalation,
+                      description: e.target.value,
+                    })
+                  }
+                  placeholder="Provide full details of the issue..."
                 />
               </FormField>
             </div>
 
             <FormFooter>
               <button
-                onClick={() => setShowCommentModal(false)}
+                onClick={() => setShowCreateModal(false)}
                 className="px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
               >
                 Cancel
               </button>
               <button
-                onClick={confirmAddComment}
-                className="px-4 py-2 text-sm text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors flex items-center gap-2"
+                onClick={confirmCreateEscalation}
+                className="px-4 py-2 text-sm text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors flex items-center gap-2"
               >
                 <Send className="w-4 h-4" />
-                Add Comment
+                Submit Escalation
               </button>
             </FormFooter>
           </FormModal>
-        )}
+        </div>
       </div>
     </div>
   );

@@ -15,6 +15,8 @@ import {
   Search,
   RefreshCw,
 } from "lucide-react";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import L from "leaflet";
 
 interface VehicleLocation {
   id: string;
@@ -124,6 +126,35 @@ const mockVehicles: VehicleLocation[] = [
     progress: 55,
   },
 ];
+
+// Custom Truck Icon for Leaflet
+const createTruckIcon = (color: string, isSelected: boolean) => {
+  return L.divIcon({
+    className: 'custom-truck-icon',
+    html: `
+      <div class="relative ${isSelected ? 'z-10' : 'z-0'}">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all ${isSelected
+        ? 'bg-red-600 ring-4 ring-red-200 dark:ring-red-900'
+        : color
+      }">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-truck"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-5l-4-4h-3v9Z"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>
+        </div>
+        ${isSelected ? '<div class="absolute inset-0 rounded-full bg-red-400 animate-ping opacity-30"></div>' : ''}
+      </div>
+    `,
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
+  });
+};
+
+// Component to handle map centering
+function MapControl({ center }: { center: [number, number] }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, map.getZoom());
+  }, [center, map]);
+  return null;
+}
 
 export default function RealTimeTracking() {
   const [vehicles, setVehicles] = useState<VehicleLocation[]>(mockVehicles);
@@ -239,11 +270,10 @@ export default function RealTimeTracking() {
 
             <button
               onClick={() => setIsLive(!isLive)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                isLive
-                  ? "bg-error-100 dark:bg-error-900/30 text-error-700 dark:text-error-400 hover:bg-error-200"
-                  : "bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-400 hover:bg-success-200"
-              }`}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isLive
+                ? "bg-error-100 dark:bg-error-900/30 text-error-700 dark:text-error-400 hover:bg-error-200"
+                : "bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-400 hover:bg-success-200"
+                }`}
             >
               {isLive ? "Pause" : "Resume"}
             </button>
@@ -338,97 +368,77 @@ export default function RealTimeTracking() {
               </div>
             </div>
 
-            {/* Mock Map */}
-            <div className="relative h-[600px] bg-gradient-to-br from-neutral-100 to-neutral-200 dark:from-neutral-950 dark:to-neutral-900">
-              {/* Map Grid */}
-              <div className="absolute inset-0 opacity-10">
-                <div className="grid grid-cols-10 h-full">
-                  {Array.from({ length: 100 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="border border-neutral-400 dark:border-neutral-600"
-                    />
-                  ))}
-                </div>
-              </div>
+            {/* Live Map */}
+            <div className="relative h-[600px] w-full bg-neutral-100 dark:bg-neutral-900">
+              <MapContainer
+                center={[25.1054, 55.2048]} // Dubai area
+                zoom={10}
+                style={{ height: "100%", width: "100%" }}
+                zoomControl={false}
+                className="z-0"
+              >
+                <TileLayer
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                />
 
-              {/* Vehicle Markers */}
-              {filteredVehicles.map((vehicle, index) => {
-                const isSelected = selectedVehicle?.id === vehicle.id;
-                const top = 15 + (index * 25) % 70;
-                const left = 10 + (index * 30) % 70;
+                {selectedVehicle && (
+                  <MapControl
+                    center={[selectedVehicle.location.lat, selectedVehicle.location.lng]}
+                  />
+                )}
 
-                return (
-                  <div
-                    key={vehicle.id}
-                    className="absolute cursor-pointer transform transition-all duration-300 hover:scale-110"
-                    style={{
-                      top: `${top}%`,
-                      left: `${left}%`,
-                    }}
-                    onClick={() => setSelectedVehicle(vehicle)}
-                  >
-                    {/* Vehicle Pin */}
-                    <div
-                      className={`relative ${
-                        isSelected ? "z-10" : "z-0"
-                      }`}
+                {filteredVehicles.map((vehicle) => {
+                  const isSelected = selectedVehicle?.id === vehicle.id;
+                  const iconColor =
+                    vehicle.status === "en-route" ? "bg-blue-600" :
+                      (vehicle.status === "loading" || vehicle.status === "unloading") ? "bg-amber-600" :
+                        "bg-neutral-600";
+
+                  return (
+                    <Marker
+                      key={vehicle.id}
+                      position={[vehicle.location.lat, vehicle.location.lng]}
+                      icon={createTruckIcon(iconColor, isSelected)}
+                      eventHandlers={{
+                        click: () => setSelectedVehicle(vehicle),
+                      }}
                     >
-                      <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all ${
-                          isSelected
-                            ? "bg-primary-600 ring-4 ring-primary-200 dark:ring-primary-900"
-                            : vehicle.status === "en-route"
-                            ? "bg-info-600"
-                            : vehicle.status === "loading" || vehicle.status === "unloading"
-                            ? "bg-warning-600"
-                            : "bg-neutral-600"
-                        }`}
-                      >
-                        <Truck className="w-5 h-5 text-white" />
-                      </div>
-
-                      {/* Vehicle Label */}
-                      {isSelected && (
-                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-white dark:bg-neutral-900 rounded-lg shadow-xl border border-neutral-200 dark:border-neutral-800 whitespace-nowrap z-20">
-                          <p className="text-xs font-semibold text-neutral-900 dark:text-white">
-                            {vehicle.vehicleNumber}
-                          </p>
-                          <p className="text-xs text-neutral-600 dark:text-neutral-400">
-                            {vehicle.driverName}
-                          </p>
-                          <div className="flex items-center gap-1 mt-1">
-                            <Navigation className="w-3 h-3 text-primary-600 dark:text-primary-400" />
-                            <span className="text-xs text-primary-600 dark:text-primary-400">
-                              {vehicle.speed} km/h
+                      <Popup className="custom-popup">
+                        <div className="p-1 min-w-[150px]">
+                          <p className="font-bold text-neutral-900">{vehicle.vehicleNumber}</p>
+                          <p className="text-sm text-neutral-700">{vehicle.driverName}</p>
+                          <div className="flex items-center gap-2 mt-2 pt-2 border-t border-neutral-100 font-medium">
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded ${getStatusColor(vehicle.status)}`}>
+                              {vehicle.status}
                             </span>
+                            {vehicle.status === "en-route" && (
+                              <span className="text-[10px] text-blue-600">
+                                {Math.round(vehicle.speed)} km/h
+                              </span>
+                            )}
                           </div>
                         </div>
-                      )}
-
-                      {/* Pulse Animation for En-Route */}
-                      {vehicle.status === "en-route" && (
-                        <div className="absolute inset-0 rounded-full bg-info-400 animate-ping opacity-30" />
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+                      </Popup>
+                    </Marker>
+                  );
+                })}
+              </MapContainer>
 
               {/* Map Legend */}
-              <div className="absolute bottom-4 left-4 bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-3 shadow-lg">
+              <div className="absolute bottom-4 left-4 bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-3 shadow-lg z-[400]">
                 <p className="text-xs font-semibold text-neutral-900 dark:text-white mb-2">
                   Legend
                 </p>
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-info-600 rounded-full" />
+                    <div className="w-3 h-3 bg-blue-600 rounded-full" />
                     <span className="text-xs text-neutral-600 dark:text-neutral-400">
                       En Route
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-warning-600 rounded-full" />
+                    <div className="w-3 h-3 bg-amber-600 rounded-full" />
                     <span className="text-xs text-neutral-600 dark:text-neutral-400">
                       Loading/Unloading
                     </span>
@@ -443,7 +453,7 @@ export default function RealTimeTracking() {
               </div>
 
               {/* Last Update Time */}
-              <div className="absolute top-4 right-4 bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 px-3 py-2 shadow-lg">
+              <div className="absolute top-4 right-4 bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 px-3 py-2 shadow-lg z-[400]">
                 <p className="text-xs text-neutral-600 dark:text-neutral-400">
                   Updated: {lastUpdate.toLocaleTimeString()}
                 </p>
@@ -488,11 +498,10 @@ export default function RealTimeTracking() {
                 <div
                   key={vehicle.id}
                   onClick={() => setSelectedVehicle(vehicle)}
-                  className={`bg-white dark:bg-neutral-900 rounded-lg border-2 p-4 cursor-pointer transition-all ${
-                    isSelected
-                      ? "border-primary-600 shadow-lg"
-                      : "border-neutral-200 dark:border-neutral-800 hover:border-primary-300 dark:hover:border-primary-700"
-                  }`}
+                  className={`bg-white dark:bg-neutral-900 rounded-lg border-2 p-4 cursor-pointer transition-all ${isSelected
+                    ? "border-primary-600 shadow-lg"
+                    : "border-neutral-200 dark:border-neutral-800 hover:border-primary-300 dark:hover:border-primary-700"
+                    }`}
                 >
                   {/* Header */}
                   <div className="flex items-start justify-between mb-3">
@@ -575,13 +584,12 @@ export default function RealTimeTracking() {
                     </div>
                     <div className="w-full bg-neutral-200 dark:bg-neutral-800 rounded-full h-2">
                       <div
-                        className={`h-2 rounded-full transition-all ${
-                          vehicle.progress === 100
-                            ? "bg-success-500"
-                            : vehicle.progress > 75
+                        className={`h-2 rounded-full transition-all ${vehicle.progress === 100
+                          ? "bg-success-500"
+                          : vehicle.progress > 75
                             ? "bg-info-500"
                             : "bg-primary-500"
-                        }`}
+                          }`}
                         style={{ width: `${vehicle.progress}%` }}
                       />
                     </div>

@@ -24,6 +24,7 @@ import {
   Copy,
   MoreVertical,
   TrendingUp,
+  Receipt,
 } from "lucide-react";
 import {
   PageHeader,
@@ -351,17 +352,16 @@ export default function QuoteReview() {
     return (
       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
         <div
-          className={`w-1.5 h-1.5 rounded-full ${
-            getStatusColor(status) === "success"
-              ? "bg-success-500"
-              : getStatusColor(status) === "warning"
+          className={`w-1.5 h-1.5 rounded-full ${getStatusColor(status) === "success"
+            ? "bg-success-500"
+            : getStatusColor(status) === "warning"
               ? "bg-warning-500"
               : getStatusColor(status) === "error"
-              ? "bg-error-500"
-              : getStatusColor(status) === "info"
-              ? "bg-info-500"
-              : "bg-neutral-400"
-          }`}
+                ? "bg-error-500"
+                : getStatusColor(status) === "info"
+                  ? "bg-info-500"
+                  : "bg-neutral-400"
+            }`}
         ></div>
         <span className="text-xs text-neutral-600 dark:text-neutral-400">
           {status}
@@ -438,6 +438,26 @@ export default function QuoteReview() {
 
   const handleDownload = (quote: Quote) => {
     toast.success(`Downloading quote ${quote.quoteNumber} PDF...`);
+  };
+
+  const handleCreateProformaInvoice = (quote: Quote) => {
+    const draft = {
+      customerName: "Current User", // In a real app, this would be the customer associated with the quote
+      inquiryNumber: quote.inquiryNumber,
+      tripNumber: "", // No trip yet for proforma
+      quoteNumber: quote.quoteNumber,
+      amount: quote.quoteAmount,
+      description: `Proforma Invoice for Quote ${quote.quoteNumber}\nService: ${quote.serviceType}\nFrom: ${quote.from}\nTo: ${quote.to}`,
+      type: "Proforma"
+    };
+
+    localStorage.setItem("pendingProformaDraft", JSON.stringify(draft));
+
+    // Dispatch custom navigation event
+    const event = new CustomEvent('navigate', { detail: 'customer-invoicing' });
+    window.dispatchEvent(event);
+
+    toast.success("Draft proforma invoice created. Redirecting to billing...");
   };
 
   const toggleSection = (section: string) => {
@@ -527,7 +547,7 @@ export default function QuoteReview() {
               onClose={() => setShowAdvancedSearch(false)}
               filters={filters}
               onFiltersChange={setFilters}
-              filterOptions={filterOptions}
+              filterOptions={filterOptions as any}
             />
           </div>
 
@@ -685,6 +705,18 @@ export default function QuoteReview() {
                             <Copy className="w-4 h-4" />
                             Copy Quote Number
                           </button>
+                          {quote.status === "Approved" && (
+                            <button
+                              onClick={() => {
+                                handleCreateProformaInvoice(quote);
+                                setOpenActionMenuId(null);
+                              }}
+                              className="w-full px-4 py-2.5 text-left text-sm text-primary-600 dark:text-primary-400 font-medium hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors flex items-center gap-2 border-t border-neutral-200 dark:border-neutral-800"
+                            >
+                              <Receipt className="w-4 h-4" />
+                              Create Proforma Invoice
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -715,7 +747,7 @@ export default function QuoteReview() {
                           <Copy className="w-3 h-3" />
                         </button>
                         {getStatusBadge(quote.status)}
-                        
+
                         {/* Three-dot menu beside status */}
                         <div className="relative ml-auto">
                           <button
@@ -787,6 +819,18 @@ export default function QuoteReview() {
                                 <Copy className="w-4 h-4" />
                                 Copy Quote Number
                               </button>
+                              {quote.status === "Approved" && (
+                                <button
+                                  onClick={() => {
+                                    handleCreateProformaInvoice(quote);
+                                    setOpenActionMenuId(null);
+                                  }}
+                                  className="w-full px-4 py-2.5 text-left text-sm text-primary-600 dark:text-primary-400 font-medium hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors flex items-center gap-2 border-t border-neutral-200 dark:border-neutral-800"
+                                >
+                                  <Receipt className="w-4 h-4" />
+                                  Create Proforma Invoice
+                                </button>
+                              )}
                             </div>
                           )}
                         </div>
@@ -1183,7 +1227,13 @@ export default function QuoteReview() {
               </div>
             )}
 
-            <div className="flex justify-end pt-4 border-t border-neutral-200 dark:border-neutral-800">
+            <div className="flex justify-end gap-3 pt-4 border-t border-neutral-200 dark:border-neutral-800">
+              {selectedQuote.status === "Approved" && (
+                <PrimaryButton onClick={() => handleCreateProformaInvoice(selectedQuote)}>
+                  <Receipt className="w-4 h-4" />
+                  Create Proforma Invoice
+                </PrimaryButton>
+              )}
               <SecondaryButton onClick={() => handleDownload(selectedQuote)}>
                 <Download className="w-4 h-4" />
                 Download PDF
@@ -1216,12 +1266,14 @@ export default function QuoteReview() {
             </div>
           </div>
 
-          <FormFooter
-            onCancel={() => setShowApproveModal(false)}
-            onSubmit={handleApprove}
-            submitText="Approve Quote"
-            cancelText="Cancel"
-          />
+          <FormFooter>
+            <SecondaryButton onClick={() => setShowApproveModal(false)}>
+              Cancel
+            </SecondaryButton>
+            <PrimaryButton onClick={handleApprove}>
+              Approve Quote
+            </PrimaryButton>
+          </FormFooter>
         </div>
       </FormModal>
 
@@ -1232,7 +1284,8 @@ export default function QuoteReview() {
         title="Reject Quote"
       >
         <div className="space-y-4">
-          <FormField label="Reason for Rejection" required>
+          <FormField>
+            <FormLabel required>Reason for Rejection</FormLabel>
             <FormTextarea
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
@@ -1251,12 +1304,14 @@ export default function QuoteReview() {
             </div>
           </div>
 
-          <FormFooter
-            onCancel={() => setShowRejectModal(false)}
-            onSubmit={handleReject}
-            submitText="Reject Quote"
-            cancelText="Cancel"
-          />
+          <FormFooter>
+            <SecondaryButton onClick={() => setShowRejectModal(false)}>
+              Cancel
+            </SecondaryButton>
+            <PrimaryButton onClick={handleReject}>
+              Reject Quote
+            </PrimaryButton>
+          </FormFooter>
         </div>
       </FormModal>
 
@@ -1267,7 +1322,8 @@ export default function QuoteReview() {
         title="Negotiate Quote"
       >
         <div className="space-y-4">
-          <FormField label="Negotiation Message" required>
+          <FormField>
+            <FormLabel required>Negotiation Message</FormLabel>
             <FormTextarea
               value={negotiationMessage}
               onChange={(e) => setNegotiationMessage(e.target.value)}
@@ -1286,12 +1342,14 @@ export default function QuoteReview() {
             </div>
           </div>
 
-          <FormFooter
-            onCancel={() => setShowNegotiateModal(false)}
-            onSubmit={handleNegotiate}
-            submitText="Send Request"
-            cancelText="Cancel"
-          />
+          <FormFooter>
+            <SecondaryButton onClick={() => setShowNegotiateModal(false)}>
+              Cancel
+            </SecondaryButton>
+            <PrimaryButton onClick={handleNegotiate}>
+              Send Request
+            </PrimaryButton>
+          </FormFooter>
         </div>
       </FormModal>
     </div>

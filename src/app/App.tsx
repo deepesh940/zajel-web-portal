@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 import { Toaster } from "sonner";
 import { Sidebar } from "@/app/components/Sidebar";
 import { GlobalHeader } from "@/app/components/GlobalHeader";
-import UIKit from "@/app/components/UIKit";
-import SampleDesign from "@/app/components/SampleDesign";
 import Login from "@/app/pages/Login";
 import UserRoleManagement from "@/app/pages/UserRoleManagement";
 import MasterDataManagement from "@/app/pages/MasterDataManagement";
@@ -189,11 +187,7 @@ export default function App() {
         />
 
         {/* Page Content */}
-        {currentPage === "ui-kit" ? (
-          <UIKit />
-        ) : currentPage === "sample-design" ? (
-          <SampleDesign />
-        ) : currentPage === "user-role-management" ? (
+        {currentPage === "user-role-management" ? (
           <UserRoleManagement />
         ) : currentPage === "master-data-management" ? (
           <MasterDataManagement />
@@ -242,7 +236,7 @@ export default function App() {
         ) : currentPage === "customer-approvals" ? (
           <CustomerApprovals />
         ) : currentPage === "escalation-management" ? (
-          <EscalationManagement />
+          <EscalationManagement userRole={currentRole} />
         ) : currentPage === "reports" ? (
           <Reports />
         ) : currentPage === "operational-reports" ? (

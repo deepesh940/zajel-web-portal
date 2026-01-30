@@ -89,6 +89,11 @@ export default function DriverAssignment() {
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [filters, setFilters] = useState<FilterCondition[]>([]);
+  const [selectedAddTripId, setSelectedAddTripId] = useState("");
+  const [selectedAddDriverId, setSelectedAddDriverId] = useState("");
+  const [addVehicleType, setAddVehicleType] = useState("");
+  const [addPickupTime, setAddPickupTime] = useState("");
+  const [addNotes, setAddNotes] = useState("");
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -331,15 +336,14 @@ export default function DriverAssignment() {
     return (
       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
         <div
-          className={`w-1.5 h-1.5 rounded-full ${
-            getStatusColor(status) === "success"
-              ? "bg-success-500"
-              : getStatusColor(status) === "warning"
+          className={`w-1.5 h-1.5 rounded-full ${getStatusColor(status) === "success"
+            ? "bg-success-500"
+            : getStatusColor(status) === "warning"
               ? "bg-warning-500"
               : getStatusColor(status) === "info"
-              ? "bg-info-500"
-              : "bg-neutral-400"
-          }`}
+                ? "bg-info-500"
+                : "bg-neutral-400"
+            }`}
         ></div>
         <span className="text-xs text-neutral-600 dark:text-neutral-400">{status}</span>
       </span>
@@ -351,8 +355,8 @@ export default function DriverAssignment() {
       priority === "High"
         ? "bg-error-100 dark:bg-error-900/30 text-error-700 dark:text-error-400"
         : priority === "Medium"
-        ? "bg-warning-100 dark:bg-warning-900/30 text-warning-700 dark:text-warning-400"
-        : "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-400";
+          ? "bg-warning-100 dark:bg-warning-900/30 text-warning-700 dark:text-warning-400"
+          : "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-400";
 
     return (
       <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded ${colorClass}`}>
@@ -424,13 +428,74 @@ export default function DriverAssignment() {
   };
 
   const handleAddNew = () => {
+    setSelectedAddTripId("");
+    setSelectedAddDriverId("");
+    setAddVehicleType("");
+    setAddPickupTime("");
+    setAddNotes("");
     setShowAddModal(true);
+  };
+
+  const handleAddInquiryChange = (inquiryId: string) => {
+    setSelectedAddTripId(inquiryId);
+    const trip = trips.find(t => t.id === inquiryId);
+    if (trip) {
+      // Auto-fill relevant details
+      setAddPickupTime(`${trip.pickupDate}T${convertTimeTo24h(trip.pickupTime)}`);
+      // Default vehicle type based on service type or trip data if available
+      const suggestedVehicle = trip.serviceType.includes("Express") ? "Van" : "Truck";
+      setAddVehicleType(suggestedVehicle);
+
+      // Auto-select first available driver matching the vehicle type
+      const availableDriver = drivers.find(
+        (d) => d.currentStatus === "Available" && d.vehicleType === suggestedVehicle
+      );
+      if (availableDriver) {
+        setSelectedAddDriverId(availableDriver.id);
+      } else {
+        // Fallback to any available driver
+        const anyAvailable = drivers.find((d) => d.currentStatus === "Available");
+        if (anyAvailable) setSelectedAddDriverId(anyAvailable.id);
+      }
+    } else {
+      setAddPickupTime("");
+      setAddVehicleType("");
+      setSelectedAddDriverId("");
+    }
+  };
+
+  const convertTimeTo24h = (timeStr: string) => {
+    const [time, modifier] = timeStr.split(' ');
+    let [hours, minutes] = time.split(':');
+    if (hours === '12') hours = '00';
+    if (modifier === 'PM') hours = (parseInt(hours, 10) + 12).toString();
+    return `${hours.padStart(2, '0')}:${minutes}`;
   };
 
   const handleSubmitNewAssignment = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Driver assigned successfully!");
-    setShowAddModal(false);
+
+    if (!selectedAddTripId || !selectedAddDriverId) {
+      toast.error("Please select both an inquiry and a driver");
+      return;
+    }
+
+    const driver = drivers.find((d) => d.id === selectedAddDriverId);
+    const trip = trips.find((t) => t.id === selectedAddTripId);
+
+    if (trip && driver) {
+      setTrips(
+        trips.map((t) =>
+          t.id === trip.id
+            ? { ...t, assignedDriver: driver, status: "Assigned" }
+            : t
+        )
+      );
+      toast.success(`Trip ${trip.inquiryNumber} assigned to ${driver.name} successfully!`);
+      setShowAddModal(false);
+      setSelectedAddTripId("");
+      setSelectedAddDriverId("");
+    }
   };
 
   const stats = [
@@ -789,7 +854,7 @@ export default function DriverAssignment() {
                     <div className="flex items-center gap-3">
                       {getStatusBadge(trip.status)}
                       {getPriorityBadge(trip.priority)}
-                      
+
                       <div className="relative ml-2">
                         <button
                           onClick={() =>
@@ -799,62 +864,62 @@ export default function DriverAssignment() {
                           }
                           className="w-8 h-8 flex items-center justify-center text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded transition-colors"
                         >
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
+                          <MoreVertical className="w-4 h-4" />
+                        </button>
 
-                      {openActionMenuId === trip.id && (
-                        <div className="absolute right-0 top-full mt-1 w-56 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg overflow-hidden z-50">
-                          <button
-                            onClick={() => handleViewDetails(trip)}
-                            className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2"
-                          >
-                            <Eye className="w-4 h-4" />
-                            View Details
-                          </button>
-
-                          {trip.status === "Unassigned" && (
+                        {openActionMenuId === trip.id && (
+                          <div className="absolute right-0 top-full mt-1 w-56 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg overflow-hidden z-50">
                             <button
-                              onClick={() => handleAssignDriver(trip)}
+                              onClick={() => handleViewDetails(trip)}
+                              className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2"
+                            >
+                              <Eye className="w-4 h-4" />
+                              View Details
+                            </button>
+
+                            {trip.status === "Unassigned" && (
+                              <button
+                                onClick={() => handleAssignDriver(trip)}
+                                className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2 border-t border-neutral-200 dark:border-neutral-800"
+                              >
+                                <UserCheck className="w-4 h-4" />
+                                Assign Driver
+                              </button>
+                            )}
+
+                            {trip.status === "Assigned" && (
+                              <button
+                                onClick={() => handleUnassignDriver(trip)}
+                                className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2 border-t border-neutral-200 dark:border-neutral-800"
+                              >
+                                <XCircle className="w-4 h-4" />
+                                Unassign Driver
+                              </button>
+                            )}
+
+                            <button
+                              onClick={() => {
+                                handleCopyInquiryNumber(trip.inquiryNumber);
+                                setOpenActionMenuId(null);
+                              }}
                               className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2 border-t border-neutral-200 dark:border-neutral-800"
                             >
-                              <UserCheck className="w-4 h-4" />
-                              Assign Driver
+                              <Copy className="w-4 h-4" />
+                              Copy Inquiry Number
                             </button>
-                          )}
 
-                          {trip.status === "Assigned" && (
                             <button
-                              onClick={() => handleUnassignDriver(trip)}
-                              className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2 border-t border-neutral-200 dark:border-neutral-800"
+                              onClick={() => {
+                                handleDownloadTrip(trip);
+                                setOpenActionMenuId(null);
+                              }}
+                              className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2"
                             >
-                              <XCircle className="w-4 h-4" />
-                              Unassign Driver
+                              <Download className="w-4 h-4" />
+                              Download Details
                             </button>
-                          )}
-
-                          <button
-                            onClick={() => {
-                              handleCopyInquiryNumber(trip.inquiryNumber);
-                              setOpenActionMenuId(null);
-                            }}
-                            className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2 border-t border-neutral-200 dark:border-neutral-800"
-                          >
-                            <Copy className="w-4 h-4" />
-                            Copy Inquiry Number
-                          </button>
-
-                          <button
-                            onClick={() => {
-                              handleDownloadTrip(trip);
-                              setOpenActionMenuId(null);
-                            }}
-                            className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2"
-                          >
-                            <Download className="w-4 h-4" />
-                            Download Details
-                          </button>
-                        </div>
-                      )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1379,21 +1444,49 @@ export default function DriverAssignment() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField>
-                  <FormLabel htmlFor="inquiryNumber" required>Inquiry Number</FormLabel>
-                  <FormInput id="inquiryNumber" type="text" required placeholder="INQ-2024-XXXX" />
+                  <FormLabel htmlFor="inquiryId" required>Select Inquiry</FormLabel>
+                  <FormSelect
+                    id="inquiryId"
+                    required
+                    value={selectedAddTripId}
+                    onChange={(e) => handleAddInquiryChange(e.target.value)}
+                  >
+                    <option value="">Choose an inquiry</option>
+                    {trips
+                      .filter((t) => t.status === "Unassigned")
+                      .map((trip) => (
+                        <option key={trip.id} value={trip.id}>
+                          {trip.inquiryNumber} - {trip.customerName}
+                        </option>
+                      ))}
+                  </FormSelect>
                 </FormField>
                 <FormField>
-                  <FormLabel htmlFor="driver" required>Select Driver</FormLabel>
-                  <FormSelect id="driver" required>
+                  <FormLabel htmlFor="addDriver" required>Select Driver</FormLabel>
+                  <FormSelect
+                    id="addDriver"
+                    required
+                    value={selectedAddDriverId}
+                    onChange={(e) => setSelectedAddDriverId(e.target.value)}
+                  >
                     <option value="">Choose a driver</option>
-                    <option value="1">Ahmed Hassan (4.8★)</option>
-                    <option value="2">Mohammed Ali (4.9★)</option>
-                    <option value="3">Khaled Omar (4.7★)</option>
+                    {drivers
+                      .filter((d) => d.currentStatus === "Available")
+                      .map((driver) => (
+                        <option key={driver.id} value={driver.id}>
+                          {driver.name} - {driver.vehicleType} ({driver.rating}★)
+                        </option>
+                      ))}
                   </FormSelect>
                 </FormField>
                 <FormField>
                   <FormLabel htmlFor="vehicle" required>Vehicle Type</FormLabel>
-                  <FormSelect id="vehicle" required>
+                  <FormSelect
+                    id="vehicle"
+                    required
+                    value={addVehicleType}
+                    onChange={(e) => setAddVehicleType(e.target.value)}
+                  >
                     <option value="">Select vehicle</option>
                     <option value="Van">Van</option>
                     <option value="Truck">Truck</option>
@@ -1402,12 +1495,24 @@ export default function DriverAssignment() {
                 </FormField>
                 <FormField>
                   <FormLabel htmlFor="pickupTime" required>Pickup Time</FormLabel>
-                  <FormInput id="pickupTime" type="datetime-local" required />
+                  <FormInput
+                    id="pickupTime"
+                    type="datetime-local"
+                    required
+                    value={addPickupTime}
+                    onChange={(e) => setAddPickupTime(e.target.value)}
+                  />
                 </FormField>
               </div>
               <FormField>
                 <FormLabel htmlFor="notes">Assignment Notes</FormLabel>
-                <FormTextarea id="notes" placeholder="Special instructions for driver..." rows={2} />
+                <FormTextarea
+                  id="notes"
+                  placeholder="Special instructions for driver..."
+                  rows={2}
+                  value={addNotes}
+                  onChange={(e) => setAddNotes(e.target.value)}
+                />
               </FormField>
             </div>
             <FormFooter>

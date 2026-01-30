@@ -22,6 +22,7 @@ import {
   User,
   Send,
   UserCheck,
+  Receipt,
 } from "lucide-react";
 import {
   PageHeader,
@@ -409,14 +410,14 @@ export default function InquiryManagement() {
       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
         <div
           className={`w-1.5 h-1.5 rounded-full ${getStatusColor(status) === "success"
-              ? "bg-success-500"
-              : getStatusColor(status) === "warning"
-                ? "bg-warning-500"
-                : getStatusColor(status) === "error"
-                  ? "bg-error-500"
-                  : getStatusColor(status) === "info"
-                    ? "bg-info-500"
-                    : "bg-neutral-400"
+            ? "bg-success-500"
+            : getStatusColor(status) === "warning"
+              ? "bg-warning-500"
+              : getStatusColor(status) === "error"
+                ? "bg-error-500"
+                : getStatusColor(status) === "info"
+                  ? "bg-info-500"
+                  : "bg-neutral-400"
             }`}
         ></div>
         <span className="text-xs text-neutral-600 dark:text-neutral-400">
@@ -431,10 +432,10 @@ export default function InquiryManagement() {
       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
         <div
           className={`w-1.5 h-1.5 rounded-full ${getPriorityColor(priority) === "error"
-              ? "bg-error-500"
-              : getPriorityColor(priority) === "warning"
-                ? "bg-warning-500"
-                : "bg-neutral-400"
+            ? "bg-error-500"
+            : getPriorityColor(priority) === "warning"
+              ? "bg-warning-500"
+              : "bg-neutral-400"
             }`}
         ></div>
         <span className="text-xs text-neutral-600 dark:text-neutral-400">
@@ -449,12 +450,12 @@ export default function InquiryManagement() {
       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
         <div
           className={`w-1.5 h-1.5 rounded-full ${getSLAColor(sla) === "success"
-              ? "bg-success-500"
-              : getSLAColor(sla) === "warning"
-                ? "bg-warning-500"
-                : getSLAColor(sla) === "error"
-                  ? "bg-error-500"
-                  : "bg-neutral-400"
+            ? "bg-success-500"
+            : getSLAColor(sla) === "warning"
+              ? "bg-warning-500"
+              : getSLAColor(sla) === "error"
+                ? "bg-error-500"
+                : "bg-neutral-400"
             }`}
         ></div>
         <span className="text-xs text-neutral-600 dark:text-neutral-400">
@@ -534,6 +535,28 @@ export default function InquiryManagement() {
       toast.success("Quote sent to customer successfully!");
       setShowSendQuoteModal(false);
     }
+  };
+
+  const handleCreateProformaInvoice = (inquiry: Inquiry) => {
+    const draft = {
+      customerName: inquiry.customerName,
+      customerEmail: inquiry.customerEmail,
+      customerPhone: inquiry.customerPhone,
+      inquiryNumber: inquiry.inquiryNumber,
+      tripNumber: "",
+      quoteNumber: "", // In a real app, this would be linked to the approved quote record
+      amount: 1500, // Placeholder - in real app would come from the approved quote
+      description: `Proforma Invoice for Inquiry ${inquiry.inquiryNumber}\nService: ${inquiry.serviceType}\nFrom: ${inquiry.from}\nTo: ${inquiry.to}`,
+      type: "Proforma"
+    };
+
+    localStorage.setItem("pendingProformaDraft", JSON.stringify(draft));
+
+    // Dispatch custom navigation event
+    const event = new CustomEvent('navigate', { detail: 'customer-invoicing' });
+    window.dispatchEvent(event);
+
+    toast.success("Draft proforma invoice created. Redirecting to billing...");
   };
 
   const handleAddNew = () => {
@@ -648,7 +671,7 @@ export default function InquiryManagement() {
               onClose={() => setShowAdvancedSearch(false)}
               filters={filters}
               onFiltersChange={setFilters}
-              filterOptions={filterOptions}
+              filterOptions={filterOptions as any}
             />
           </div>
 
@@ -825,6 +848,18 @@ export default function InquiryManagement() {
                             <Copy className="w-4 h-4" />
                             Copy Inquiry Number
                           </button>
+                          {inquiry.status === "Quote Approved" && (
+                            <button
+                              onClick={() => {
+                                handleCreateProformaInvoice(inquiry);
+                                setOpenActionMenuId(null);
+                              }}
+                              className="w-full px-4 py-2.5 text-left text-sm text-primary-600 dark:text-primary-400 font-medium hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors flex items-center gap-2 border-t border-neutral-200 dark:border-neutral-800"
+                            >
+                              <Receipt className="w-4 h-4" />
+                              Create Proforma Invoice
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -1139,6 +1174,18 @@ export default function InquiryManagement() {
                                   <Copy className="w-4 h-4" />
                                   Copy Inquiry Number
                                 </button>
+                                {inquiry.status === "Quote Approved" && (
+                                  <button
+                                    onClick={() => {
+                                      handleCreateProformaInvoice(inquiry);
+                                      setOpenActionMenuId(null);
+                                    }}
+                                    className="w-full px-4 py-2.5 text-left text-sm text-primary-600 dark:text-primary-400 font-medium hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors flex items-center gap-2 border-t border-neutral-200 dark:border-neutral-800"
+                                  >
+                                    <Receipt className="w-4 h-4" />
+                                    Create Proforma Invoice
+                                  </button>
+                                )}
                               </div>
                             )}
                           </div>
@@ -1327,6 +1374,18 @@ export default function InquiryManagement() {
                   Send Quote
                 </button>
               )}
+              {selectedInquiry.status === "Quote Approved" && (
+                <button
+                  onClick={() => {
+                    setShowDetailsModal(false);
+                    handleCreateProformaInvoice(selectedInquiry);
+                  }}
+                  className="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors font-medium text-sm flex items-center"
+                >
+                  <Receipt className="w-4 h-4 mr-2" />
+                  Create Proforma Invoice
+                </button>
+              )}
             </div>
           </div>
         </FormModal>
@@ -1339,7 +1398,8 @@ export default function InquiryManagement() {
         title="Assign Inquiry"
       >
         <div className="space-y-4">
-          <FormField label="Assign To" required>
+          <FormField>
+            <FormLabel required>Assign To</FormLabel>
             <FormSelect
               value={assignedUser}
               onChange={(e) => setAssignedUser(e.target.value)}
@@ -1359,12 +1419,14 @@ export default function InquiryManagement() {
             </p>
           </div>
 
-          <FormFooter
-            onCancel={() => setShowAssignModal(false)}
-            onSubmit={confirmAssign}
-            submitText="Assign Inquiry"
-            cancelText="Cancel"
-          />
+          <FormFooter>
+            <SecondaryButton onClick={() => setShowAssignModal(false)}>
+              Cancel
+            </SecondaryButton>
+            <PrimaryButton onClick={confirmAssign}>
+              Assign Inquiry
+            </PrimaryButton>
+          </FormFooter>
         </div>
       </FormModal>
 
@@ -1390,12 +1452,14 @@ export default function InquiryManagement() {
             </div>
           </div>
 
-          <FormFooter
-            onCancel={() => setShowSendQuoteModal(false)}
-            onSubmit={confirmSendQuote}
-            submitText="Send Quote"
-            cancelText="Cancel"
-          />
+          <FormFooter>
+            <SecondaryButton onClick={() => setShowSendQuoteModal(false)}>
+              Cancel
+            </SecondaryButton>
+            <PrimaryButton onClick={confirmSendQuote}>
+              Send Quote
+            </PrimaryButton>
+          </FormFooter>
         </div>
       </FormModal>
 
