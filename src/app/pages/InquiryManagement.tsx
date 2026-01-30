@@ -55,13 +55,13 @@ interface Inquiry {
   customerEmail: string;
   customerPhone: string;
   status:
-    | "New"
-    | "Under Review"
-    | "Quote Sent"
-    | "Quote Approved"
-    | "Quote Rejected"
-    | "Expired"
-    | "Cancelled";
+  | "New"
+  | "Under Review"
+  | "Quote Sent"
+  | "Quote Approved"
+  | "Quote Rejected"
+  | "Expired"
+  | "Cancelled";
   serviceType: string;
   from: string;
   to: string;
@@ -408,17 +408,16 @@ export default function InquiryManagement() {
     return (
       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
         <div
-          className={`w-1.5 h-1.5 rounded-full ${
-            getStatusColor(status) === "success"
+          className={`w-1.5 h-1.5 rounded-full ${getStatusColor(status) === "success"
               ? "bg-success-500"
               : getStatusColor(status) === "warning"
-              ? "bg-warning-500"
-              : getStatusColor(status) === "error"
-              ? "bg-error-500"
-              : getStatusColor(status) === "info"
-              ? "bg-info-500"
-              : "bg-neutral-400"
-          }`}
+                ? "bg-warning-500"
+                : getStatusColor(status) === "error"
+                  ? "bg-error-500"
+                  : getStatusColor(status) === "info"
+                    ? "bg-info-500"
+                    : "bg-neutral-400"
+            }`}
         ></div>
         <span className="text-xs text-neutral-600 dark:text-neutral-400">
           {status}
@@ -431,13 +430,12 @@ export default function InquiryManagement() {
     return (
       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
         <div
-          className={`w-1.5 h-1.5 rounded-full ${
-            getPriorityColor(priority) === "error"
+          className={`w-1.5 h-1.5 rounded-full ${getPriorityColor(priority) === "error"
               ? "bg-error-500"
               : getPriorityColor(priority) === "warning"
-              ? "bg-warning-500"
-              : "bg-neutral-400"
-          }`}
+                ? "bg-warning-500"
+                : "bg-neutral-400"
+            }`}
         ></div>
         <span className="text-xs text-neutral-600 dark:text-neutral-400">
           {priority}
@@ -450,15 +448,14 @@ export default function InquiryManagement() {
     return (
       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
         <div
-          className={`w-1.5 h-1.5 rounded-full ${
-            getSLAColor(sla) === "success"
+          className={`w-1.5 h-1.5 rounded-full ${getSLAColor(sla) === "success"
               ? "bg-success-500"
               : getSLAColor(sla) === "warning"
-              ? "bg-warning-500"
-              : getSLAColor(sla) === "error"
-              ? "bg-error-500"
-              : "bg-neutral-400"
-          }`}
+                ? "bg-warning-500"
+                : getSLAColor(sla) === "error"
+                  ? "bg-error-500"
+                  : "bg-neutral-400"
+            }`}
         ></div>
         <span className="text-xs text-neutral-600 dark:text-neutral-400">
           {sla}
@@ -861,7 +858,7 @@ export default function InquiryManagement() {
                         </button>
                         {getStatusBadge(inquiry.status)}
                         {getPriorityBadge(inquiry.priority)}
-                        
+
                         {/* Three-dot menu beside status badges */}
                         <div className="relative ml-auto">
                           <button
@@ -1190,16 +1187,13 @@ export default function InquiryManagement() {
         >
           <div className="space-y-6">
             {/* Inquiry Overview */}
-            <div className="flex items-start justify-between pb-4 border-b border-neutral-200 dark:border-neutral-800">
+            <div className="bg-neutral-50 dark:bg-neutral-900 p-4 rounded-lg flex items-start justify-between">
               <div>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-1">
-                  Inquiry Number
+                <p className="text-sm font-medium text-neutral-900 dark:text-white">
+                  Inquiry Status
                 </p>
-                <p className="text-xl font-semibold text-neutral-900 dark:text-white">
-                  {selectedInquiry.inquiryNumber}
-                </p>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-2">
-                  Submitted: {selectedInquiry.submittedDate}
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                  Submitted on {selectedInquiry.submittedDate}
                 </p>
               </div>
               <div className="text-right space-y-2">
@@ -1216,7 +1210,7 @@ export default function InquiryManagement() {
               <h4 className="text-sm font-semibold text-neutral-900 dark:text-white mb-3">
                 Customer Information
               </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-neutral-50 dark:bg-neutral-950 rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg">
                 <div>
                   <p className="text-xs text-neutral-600 dark:text-neutral-400">
                     Name
@@ -1258,38 +1252,25 @@ export default function InquiryManagement() {
                 <h4 className="text-sm font-semibold text-neutral-900 dark:text-white mb-3">
                   Shipment Information
                 </h4>
-                <div className="space-y-2 text-sm">
-                  <div>
-                    <span className="text-neutral-600 dark:text-neutral-400">
-                      Service Type:{" "}
-                    </span>
-                    <span className="text-neutral-900 dark:text-white font-medium">
-                      {selectedInquiry.serviceType}
-                    </span>
+                <div className="space-y-3 p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-neutral-600 dark:text-neutral-400">Service Type</span>
+                    <span className="text-sm font-medium text-neutral-900 dark:text-white">{selectedInquiry.serviceType}</span>
                   </div>
-                  <div>
-                    <span className="text-neutral-600 dark:text-neutral-400">
-                      Pickup Date:{" "}
-                    </span>
-                    <span className="text-neutral-900 dark:text-white font-medium">
-                      {selectedInquiry.pickupDate}
-                    </span>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-neutral-600 dark:text-neutral-400">Pickup Date</span>
+                    <span className="text-sm font-medium text-neutral-900 dark:text-white">{selectedInquiry.pickupDate}</span>
                   </div>
-                  <div>
-                    <span className="text-neutral-600 dark:text-neutral-400">
-                      From:{" "}
-                    </span>
-                    <span className="text-neutral-900 dark:text-white font-medium">
-                      {selectedInquiry.from}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-neutral-600 dark:text-neutral-400">
-                      To:{" "}
-                    </span>
-                    <span className="text-neutral-900 dark:text-white font-medium">
-                      {selectedInquiry.to}
-                    </span>
+                  <div className="pt-2 border-t border-neutral-100 dark:border-neutral-800">
+                    <div className="flex justify-between mb-1">
+                      <span className="text-xs text-neutral-500">From</span>
+                      <span className="text-xs text-neutral-500">To</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm font-medium text-neutral-900 dark:text-white">
+                      <span>{selectedInquiry.from}</span>
+                      <span className="text-neutral-300 mx-2">→</span>
+                      <span>{selectedInquiry.to}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1298,46 +1279,39 @@ export default function InquiryManagement() {
                 <h4 className="text-sm font-semibold text-neutral-900 dark:text-white mb-3">
                   Cargo Summary
                 </h4>
-                <div className="space-y-2 text-sm">
-                  <div>
-                    <span className="text-neutral-600 dark:text-neutral-400">
-                      Total Items:{" "}
-                    </span>
-                    <span className="text-neutral-900 dark:text-white font-medium">
-                      {selectedInquiry.itemCount}
-                    </span>
+                <div className="space-y-3 p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-neutral-600 dark:text-neutral-400">Total Items</span>
+                    <span className="text-sm font-medium text-neutral-900 dark:text-white">{selectedInquiry.itemCount}</span>
                   </div>
-                  <div>
-                    <span className="text-neutral-600 dark:text-neutral-400">
-                      Total Weight:{" "}
-                    </span>
-                    <span className="text-neutral-900 dark:text-white font-medium">
-                      {selectedInquiry.totalWeight} kg
-                    </span>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-neutral-600 dark:text-neutral-400">Total Weight</span>
+                    <span className="text-sm font-medium text-neutral-900 dark:text-white">{selectedInquiry.totalWeight} kg</span>
                   </div>
-                  <div>
-                    <span className="text-neutral-600 dark:text-neutral-400">
-                      Total Value:{" "}
-                    </span>
-                    <span className="text-neutral-900 dark:text-white font-medium">
-                      AED {selectedInquiry.totalValue.toLocaleString()}
-                    </span>
+                  <div className="flex justify-between pt-2 border-t border-neutral-100 dark:border-neutral-800">
+                    <span className="text-sm font-medium text-neutral-900 dark:text-white">Total Value</span>
+                    <span className="text-sm font-bold text-primary-600 dark:text-primary-400">AED {selectedInquiry.totalValue.toLocaleString()}</span>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center gap-3 pt-4 border-t border-neutral-200 dark:border-neutral-800">
+            <div className="flex items-center justify-end gap-3 pt-6 border-t border-neutral-200 dark:border-neutral-800">
+              <SecondaryButton
+                onClick={() => setShowDetailsModal(false)}
+              >
+                Close
+              </SecondaryButton>
               {selectedInquiry.status === "New" && (
                 <button
                   onClick={() => {
                     setShowDetailsModal(false);
                     handleAssign(selectedInquiry);
                   }}
-                  className="flex-1 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors font-medium"
+                  className="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors font-medium text-sm flex items-center"
                 >
-                  <UserCheck className="w-4 h-4 inline mr-2" />
+                  <UserCheck className="w-4 h-4 mr-2" />
                   Assign Inquiry
                 </button>
               )}
@@ -1347,18 +1321,12 @@ export default function InquiryManagement() {
                     setShowDetailsModal(false);
                     handleSendQuote(selectedInquiry);
                   }}
-                  className="flex-1 px-4 py-2.5 bg-success-600 hover:bg-success-700 text-white rounded-lg transition-colors font-medium"
+                  className="px-6 py-2 bg-success-600 hover:bg-success-700 text-white rounded-lg transition-colors font-medium text-sm flex items-center"
                 >
-                  <Send className="w-4 h-4 inline mr-2" />
+                  <Send className="w-4 h-4 mr-2" />
                   Send Quote
                 </button>
               )}
-              <SecondaryButton
-                onClick={() => setShowDetailsModal(false)}
-                className="flex-1"
-              >
-                Close
-              </SecondaryButton>
             </div>
           </div>
         </FormModal>

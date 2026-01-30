@@ -10,7 +10,10 @@ import {
   UserPlus,
   ChevronDown,
   Check,
-  LayoutDashboard
+  LayoutDashboard,
+  Globe,
+  Zap,
+  Headphones
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import logo from "@/assets/f564cf890f443da9bfb1483c7e6b48a878d5d763.png";
@@ -127,9 +130,17 @@ export default function Login({ onLogin }: LoginProps) {
 
   return (
     <div className="min-h-screen flex w-full bg-[#FAFAFA] dark:bg-neutral-950 overflow-hidden relative">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 z-0 opacity-[0.4]"
+        style={{
+          backgroundImage: 'radial-gradient(#CBD5E1 1px, transparent 1px)',
+          backgroundSize: '32px 32px'
+        }}
+      />
+
       {/* Background Decorative Elements */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-100/50 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-100/50 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-100/50 rounded-full blur-[100px] pointer-events-none z-0" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-100/50 rounded-full blur-[100px] pointer-events-none z-0" />
 
       {/* Main Container */}
       <div className="w-full max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-2 min-h-screen relative z-10">
@@ -183,6 +194,36 @@ export default function Login({ onLogin }: LoginProps) {
                 <span className="text-xs text-neutral-500">Enterprises worldwide</span>
               </div>
             </motion.div>
+
+            {/* Feature Highlights Grid */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="grid grid-cols-3 gap-6 pt-12"
+            >
+              <div className="space-y-2">
+                <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                  <Globe className="w-5 h-5" />
+                </div>
+                <h3 className="font-semibold text-neutral-900 dark:text-white">Global Reach</h3>
+                <p className="text-xs text-neutral-500 leading-relaxed">Seamless international shipping to 200+ countries.</p>
+              </div>
+              <div className="space-y-2">
+                <div className="w-10 h-10 rounded-lg bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                  <Zap className="w-5 h-5" />
+                </div>
+                <h3 className="font-semibold text-neutral-900 dark:text-white">Real-time</h3>
+                <p className="text-xs text-neutral-500 leading-relaxed">Live tracking and instant status updates.</p>
+              </div>
+              <div className="space-y-2">
+                <div className="w-10 h-10 rounded-lg bg-green-50 dark:bg-green-900/20 flex items-center justify-center text-green-600 dark:text-green-400">
+                  <Headphones className="w-5 h-5" />
+                </div>
+                <h3 className="font-semibold text-neutral-900 dark:text-white">24/7 Support</h3>
+                <p className="text-xs text-neutral-500 leading-relaxed">Dedicated support team always available.</p>
+              </div>
+            </motion.div>
           </div>
 
           <motion.div
@@ -201,7 +242,7 @@ export default function Login({ onLogin }: LoginProps) {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
-            className="w-full max-w-md space-y-8 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/20 dark:border-neutral-800"
+            className="w-full max-w-[480px] space-y-8 bg-white/60 dark:bg-neutral-900/60 backdrop-blur-2xl p-10 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/40 dark:border-neutral-800"
           >
             {/* Mobile Logo */}
             <div className="lg:hidden flex justify-center mb-4">
