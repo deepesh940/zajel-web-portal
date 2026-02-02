@@ -307,15 +307,14 @@ export default function UserRoleManagement() {
     return (
       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
         <div
-          className={`w-1.5 h-1.5 rounded-full ${
-            getStatusColor(status) === "success"
+          className={`w-1.5 h-1.5 rounded-full ${getStatusColor(status) === "success"
               ? "bg-success-500"
               : getStatusColor(status) === "warning"
-              ? "bg-warning-500"
-              : getStatusColor(status) === "error"
-              ? "bg-error-500"
-              : "bg-neutral-400"
-          }`}
+                ? "bg-warning-500"
+                : getStatusColor(status) === "error"
+                  ? "bg-error-500"
+                  : "bg-neutral-400"
+            }`}
         ></div>
         <span className="text-xs text-neutral-600 dark:text-neutral-400">{status}</span>
       </span>
@@ -393,16 +392,16 @@ export default function UserRoleManagement() {
         users.map((u) =>
           u.id === editingUser.id
             ? {
-                ...u,
-                name: formName,
-                email: formEmail,
-                phone: formPhone,
-                role: formRole,
-                department: formDepartment,
-                status: formStatus,
-                avatar: formAvatar || undefined,
-                permissions: formPermissions,
-              }
+              ...u,
+              name: formName,
+              email: formEmail,
+              phone: formPhone,
+              role: formRole,
+              department: formDepartment,
+              status: formStatus,
+              avatar: formAvatar || undefined,
+              permissions: formPermissions,
+            }
             : u
         )
       );
@@ -513,12 +512,7 @@ export default function UserRoleManagement() {
             onClick: handleAddNewUser,
           }}
           moreMenu={{
-            onImport: () => toast.success("Import functionality"),
-            exportOptions: {
-              onExportCSV: () => toast.success("Exporting as CSV..."),
-              onExportExcel: () => toast.success("Exporting as Excel..."),
-              onExportPDF: () => toast.success("Exporting as PDF..."),
-            },
+
             onPrint: () => window.print(),
             sortOptions: [
               {

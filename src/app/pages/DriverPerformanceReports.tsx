@@ -6,17 +6,15 @@ import {
   SummaryWidgets,
   SearchBar,
   Pagination,
-  StatusFilter,
-  DateRangeFilter,
+  AdvancedSearchPanel,
+  FilterChips,
 } from "../components/hb/listing";
+import type { FilterCondition } from "../components/hb/listing";
 import { toast } from "sonner";
 
 export default function DriverPerformanceReports() {
-  const [dateRange, setDateRange] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [showDateRangePicker, setShowDateRangePicker] = useState(false);
-  const [vehicleType, setVehicleType] = useState("all");
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [filters, setFilters] = useState<FilterCondition[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSummary, setShowSummary] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -181,23 +179,33 @@ export default function DriverPerformanceReports() {
     },
   ];
 
-  const vehicleTypeOptions = [
-    { value: "all", label: "All Vehicle Types", count: 89 },
-    { value: "van-3.5", label: "Van - 3.5 Ton", count: 42 },
-    { value: "truck-7.5", label: "Truck - 7.5 Ton", count: 28 },
-    { value: "truck-10", label: "Truck - 10 Ton", count: 19 },
-  ];
-
-  const handleRefreshData = () => {
-    toast.success("Refreshing data...");
+  const filterOptions = {
+    'Vehicle Type': ['Van - 3.5 Ton', 'Truck - 7.5 Ton', 'Truck - 10 Ton'],
+    'Date Range': ['Today', 'Yesterday', 'Last 7 Days', 'Last 30 Days', 'This Month', 'Last Month'],
   };
 
-  const handleDateRangeApply = (start: string, end: string, label?: string) => {
-    setStartDate(start);
-    setEndDate(end);
-    setDateRange(label || `${start} to ${end}`);
-    toast.success(`Date range applied: ${label || `${start} to ${end}`}`);
-  };
+  const filteredData = reportData.filter(item => {
+    const matchesSearch = searchQuery === "" ||
+      item.driverName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.driverId.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesFilters = filters.every(filter => {
+      if (filter.values.length === 0) return true;
+
+      if (filter.field === 'Vehicle Type') {
+        return filter.values.includes(item.vehicleTypeLabel);
+      }
+      // Add more filter conditions here as needed for other fields like 'Date Range'
+      return true;
+    });
+
+    return matchesSearch && matchesFilters;
+  });
+
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
     <div className="px-6 py-8 bg-white dark:bg-neutral-950">
@@ -205,7 +213,7 @@ export default function DriverPerformanceReports() {
         {/* ========== PAGE HEADER ========== */}
         <PageHeader
           title="Driver Performance Reports"
-          subtitle="Driver productivity and delivery performance metrics"
+          subtitle="Driver productivity, efficiency and safety metrics"
           breadcrumbs={[
             { label: "Reports", href: "#" },
             { label: "Driver Performance", current: true },
@@ -219,47 +227,51 @@ export default function DriverPerformanceReports() {
             onPrint: () => window.print(),
           }}
         >
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search drivers..."
-          />
-
           <div className="relative">
-            <IconButton
-              icon={Calendar}
-              onClick={() => setShowDateRangePicker(!showDateRangePicker)}
-              tooltip={dateRange || "Select Date Range"}
-              active={!!dateRange}
+            <SearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              onAdvancedSearch={() => setShowAdvancedSearch(true)}
+              activeFilterCount={filters.filter(f => f.values.length > 0).length}
+              placeholder="Search drivers..."
             />
-            <DateRangeFilter
-              isOpen={showDateRangePicker}
-              onClose={() => setShowDateRangePicker(false)}
-              startDate={startDate}
-              endDate={endDate}
-              onApply={handleDateRangeApply}
+
+            <AdvancedSearchPanel
+              isOpen={showAdvancedSearch}
+              onClose={() => setShowAdvancedSearch(false)}
+              filters={filters}
+              onFiltersChange={setFilters}
+              filterOptions={filterOptions}
             />
           </div>
-
-          <StatusFilter
-            currentStatus={vehicleType}
-            statuses={vehicleTypeOptions}
-            onChange={setVehicleType}
-          />
 
           <IconButton
             icon={BarChart3}
             onClick={() => setShowSummary(!showSummary)}
-            tooltip="Toggle Summary"
             active={showSummary}
+            title="Toggle summary"
           />
-
           <IconButton
             icon={RefreshCw}
-            onClick={handleRefreshData}
-            tooltip="Refresh Data"
+            onClick={() => toast.success("Refreshed")}
+            title="Refresh"
           />
         </PageHeader>
+
+        {/* ========== FILTER CHIPS ========== */}
+        {filters.some((f) => f.values.length > 0) && (
+          <FilterChips
+            filters={filters}
+            onRemove={(filterId) => {
+              setFilters(
+                filters.map((f) =>
+                  f.id === filterId ? { ...f, values: [] } : f
+                )
+              );
+            }}
+            onClearAll={() => setFilters([])}
+          />
+        )}
 
         {/* ========== SUMMARY WIDGETS ========== */}
         {showSummary && (
@@ -311,61 +323,49 @@ export default function DriverPerformanceReports() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
-                {reportData
-                  .filter((row) => {
-                    if (vehicleType !== "all" && row.vehicleType !== vehicleType) return false;
-                    if (searchQuery) {
-                      const query = searchQuery.toLowerCase();
-                      return (
-                        row.driverId.toLowerCase().includes(query) ||
-                        row.driverName.toLowerCase().includes(query)
-                      );
-                    }
-                    return true;
-                  })
-                  .map((row) => (
-                    <tr
-                      key={row.driverId}
-                      className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors"
-                    >
-                      <td className="px-4 py-3 text-sm font-medium text-primary-600 dark:text-primary-400">
-                        {row.driverId}
-                      </td>
-                      <td className="px-4 py-3 text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                        {row.driverName}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
-                        {row.vehicleTypeLabel}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-center text-neutral-700 dark:text-neutral-300">
-                        {row.totalTrips}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-center text-success-600 dark:text-success-400 font-medium">
-                        {row.completedTrips}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-center text-neutral-700 dark:text-neutral-300 font-medium">
-                        {row.completionRate}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-right text-primary-600 dark:text-primary-400 font-semibold">
-                        {row.totalRevenue}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-right text-neutral-700 dark:text-neutral-300">
-                        {row.avgRevPerTrip}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-right text-neutral-700 dark:text-neutral-300">
-                        {row.totalDistance}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-center text-warning-600 dark:text-warning-400 font-medium">
-                        ⭐ {row.avgRating}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-center text-success-600 dark:text-success-400 font-medium">
-                        {row.onTimeRate}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-center text-success-600 dark:text-success-400 font-medium">
-                        {row.slaCompliance}
-                      </td>
-                    </tr>
-                  ))}
+                {paginatedData.map((row) => (
+                  <tr
+                    key={row.driverId}
+                    className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors"
+                  >
+                    <td className="px-4 py-3 text-sm font-medium text-primary-600 dark:text-primary-400">
+                      {row.driverId}
+                    </td>
+                    <td className="px-4 py-3 text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                      {row.driverName}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
+                      {row.vehicleTypeLabel}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-center text-neutral-700 dark:text-neutral-300">
+                      {row.totalTrips}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-center text-success-600 dark:text-success-400 font-medium">
+                      {row.completedTrips}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-center text-neutral-700 dark:text-neutral-300 font-medium">
+                      {row.completionRate}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-right text-primary-600 dark:text-primary-400 font-semibold">
+                      {row.totalRevenue}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-right text-neutral-700 dark:text-neutral-300">
+                      {row.avgRevPerTrip}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-right text-neutral-700 dark:text-neutral-300">
+                      {row.totalDistance}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-center text-warning-600 dark:text-warning-400 font-medium">
+                      ⭐ {row.avgRating}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-center text-success-600 dark:text-success-400 font-medium">
+                      {row.onTimeRate}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-center text-success-600 dark:text-success-400 font-medium">
+                      {row.slaCompliance}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -374,10 +374,11 @@ export default function DriverPerformanceReports() {
         {/* ========== PAGINATION ========== */}
         <Pagination
           currentPage={currentPage}
-          totalItems={89}
+          totalItems={filteredData.length}
           itemsPerPage={itemsPerPage}
           onPageChange={setCurrentPage}
           onItemsPerPageChange={setItemsPerPage}
+          totalPages={Math.ceil(filteredData.length / itemsPerPage)}
         />
       </div>
     </div>

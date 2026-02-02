@@ -293,12 +293,12 @@ export default function CustomerApprovals() {
       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
         <div
           className={`w-1.5 h-1.5 rounded-full ${getStatusColor(status) === "success"
-              ? "bg-success-500"
-              : getStatusColor(status) === "warning"
-                ? "bg-warning-500"
-                : getStatusColor(status) === "error"
-                  ? "bg-error-500"
-                  : "bg-neutral-400"
+            ? "bg-success-500"
+            : getStatusColor(status) === "warning"
+              ? "bg-warning-500"
+              : getStatusColor(status) === "error"
+                ? "bg-error-500"
+                : "bg-neutral-400"
             }`}
         ></div>
         <span className="text-xs text-neutral-600 dark:text-neutral-400">{status}</span>
@@ -319,60 +319,17 @@ export default function CustomerApprovals() {
 
   // ===================
   // FILTER & PAGINATION LOGIC
-  // ===================
-
-  const filterOptions: FilterCondition[] =
+  // Filter options for advanced search
+  const filterOptions: Record<string, string[]> =
     activeTab === "operational"
-      ? [
-        {
-          id: "status",
-          label: "Status",
-          type: "select",
-          values: [],
-          options: [
-            { value: "Pending", label: "Pending" },
-            { value: "Approved", label: "Approved" },
-            { value: "Rejected", label: "Rejected" },
-            { value: "Expired", label: "Expired" },
-          ],
-        },
-        {
-          id: "approvalType",
-          label: "Approval Type",
-          type: "select",
-          values: [],
-          options: [
-            { value: "Quote", label: "Quote" },
-            { value: "Delivery Proof", label: "Delivery Proof" },
-            { value: "Payment", label: "Payment" },
-            { value: "Route Change", label: "Route Change" },
-          ],
-        },
-        {
-          id: "priority",
-          label: "Priority",
-          type: "select",
-          values: [],
-          options: [
-            { value: "High", label: "High" },
-            { value: "Medium", label: "Medium" },
-            { value: "Low", label: "Low" },
-          ],
-        },
-      ]
-      : [
-        {
-          id: "status",
-          label: "Status",
-          type: "select",
-          values: [],
-          options: [
-            { value: "Pending", label: "Pending" },
-            { value: "Verified", label: "Verified" },
-            { value: "Rejected", label: "Rejected" },
-          ],
-        },
-      ];
+      ? {
+        "Status": ["Pending", "Approved", "Rejected", "Expired"],
+        "Approval Type": ["Quote", "Delivery Proof", "Payment", "Route Change"],
+        "Priority": ["High", "Medium", "Low"],
+      }
+      : {
+        "Status": ["Pending", "Verified", "Rejected"],
+      };
 
   // Operational Approvals Filtering
   const filteredOperationalApprovals = operationalApprovals.filter((approval) => {
@@ -381,13 +338,13 @@ export default function CustomerApprovals() {
       approval.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       approval.approvalType.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const statusFilter = filters.find((f) => f.id === "status");
+    const statusFilter = filters.find((f) => f.field === "Status");
     const matchesStatus = !statusFilter || statusFilter.values.length === 0 || statusFilter.values.includes(approval.status);
 
-    const typeFilter = filters.find((f) => f.id === "approvalType");
+    const typeFilter = filters.find((f) => f.field === "Approval Type");
     const matchesType = !typeFilter || typeFilter.values.length === 0 || typeFilter.values.includes(approval.approvalType);
 
-    const priorityFilter = filters.find((f) => f.id === "priority");
+    const priorityFilter = filters.find((f) => f.field === "Priority");
     const matchesPriority = !priorityFilter || priorityFilter.values.length === 0 || priorityFilter.values.includes(approval.priority);
 
     return matchesSearch && matchesStatus && matchesType && matchesPriority;
@@ -402,7 +359,7 @@ export default function CustomerApprovals() {
       registration.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       registration.email.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const statusFilter = filters.find((f) => f.id === "status");
+    const statusFilter = filters.find((f) => f.field === "Status");
     const matchesStatus = !statusFilter || statusFilter.values.length === 0 || statusFilter.values.includes(registration.status);
 
     return matchesSearch && matchesStatus;
@@ -667,12 +624,7 @@ export default function CustomerApprovals() {
             icon: Plus,
           }}
           moreMenu={{
-            onImport: () => toast.success("Import functionality"),
-            exportOptions: {
-              onExportCSV: () => toast.success("Exporting as CSV..."),
-              onExportExcel: () => toast.success("Exporting as Excel..."),
-              onExportPDF: () => toast.success("Exporting as PDF..."),
-            },
+
             onPrint: () => window.print(),
             sortOptions:
               activeTab === "operational"
@@ -729,8 +681,8 @@ export default function CustomerApprovals() {
                   setFilters([]);
                 }}
                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === "operational"
-                    ? "border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400"
-                    : "border-transparent text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-300 hover:border-neutral-300"
+                  ? "border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400"
+                  : "border-transparent text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-300 hover:border-neutral-300"
                   }`}
               >
                 Operational Approvals
@@ -742,8 +694,8 @@ export default function CustomerApprovals() {
                   setFilters([]);
                 }}
                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === "registration"
-                    ? "border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400"
-                    : "border-transparent text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-300 hover:border-neutral-300"
+                  ? "border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400"
+                  : "border-transparent text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-300 hover:border-neutral-300"
                   }`}
               >
                 Registration Approvals
@@ -757,9 +709,9 @@ export default function CustomerApprovals() {
           <FilterChips
             filters={filters}
             onRemove={(filterId) => {
-              setFilters(filters.map((f) => (f.id === filterId ? { ...f, values: [] } : f)));
+              setFilters(filters.filter((f) => f.id !== filterId));
             }}
-            onClearAll={() => setFilters(filterOptions.map((f) => ({ ...f, values: [] })))}
+            onClearAll={() => setFilters([])}
           />
         )}
 
@@ -1283,13 +1235,12 @@ export default function CustomerApprovals() {
                   id="approvalType"
                   value={newApprovalForm.approvalType}
                   onChange={(e) => setNewApprovalForm({ ...newApprovalForm, approvalType: e.target.value as OperationalApproval["approvalType"] })}
-                  options={[
-                    { value: "Quote", label: "Quote" },
-                    { value: "Delivery Proof", label: "Delivery Proof" },
-                    { value: "Payment", label: "Payment" },
-                    { value: "Route Change", label: "Route Change" },
-                  ]}
-                />
+                >
+                  <option value="Quote">Quote</option>
+                  <option value="Delivery Proof">Delivery Proof</option>
+                  <option value="Payment">Payment</option>
+                  <option value="Route Change">Route Change</option>
+                </FormSelect>
               </FormField>
 
               <FormField>
@@ -1357,12 +1308,11 @@ export default function CustomerApprovals() {
                   id="priority"
                   value={newApprovalForm.priority}
                   onChange={(e) => setNewApprovalForm({ ...newApprovalForm, priority: e.target.value as OperationalApproval["priority"] })}
-                  options={[
-                    { value: "High", label: "High" },
-                    { value: "Medium", label: "Medium" },
-                    { value: "Low", label: "Low" },
-                  ]}
-                />
+                >
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
+                </FormSelect>
               </FormField>
 
               <FormField>

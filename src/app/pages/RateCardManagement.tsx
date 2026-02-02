@@ -202,7 +202,7 @@ export default function RateCardManagement() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedRateCard, setSelectedRateCard] = useState<RateCard | null>(null);
-  
+
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
@@ -244,7 +244,7 @@ export default function RateCardManagement() {
       rc.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
       rc.originEmirate.toLowerCase().includes(searchQuery.toLowerCase()) ||
       rc.destinationEmirate.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const matchesFilters = filters.every(filter => {
       if (filter.field === 'Status') {
         return filter.values.some(v => v.toLowerCase() === rc.status);
@@ -257,7 +257,7 @@ export default function RateCardManagement() {
       }
       return true;
     });
-    
+
     return matchesSearch && matchesFilters;
   });
 
@@ -366,6 +366,10 @@ export default function RateCardManagement() {
             { label: 'Rate Cards', current: true },
           ]}
         >
+          <PrimaryButton icon={Plus} onClick={handleAdd}>
+            Add Rate Card
+          </PrimaryButton>
+
           <div className="relative">
             <SearchBar
               value={searchQuery}
@@ -382,16 +386,12 @@ export default function RateCardManagement() {
               filterOptions={filterOptions}
             />
           </div>
-
-          <PrimaryButton icon={Plus} onClick={handleAdd}>
-            Add Rate Card
-          </PrimaryButton>
           <IconButton icon={BarChart3} onClick={() => setShowSummary(!showSummary)} active={showSummary} />
-          <IconButton icon={RefreshCw} onClick={() => {}} />
+          <IconButton icon={RefreshCw} onClick={() => { }} />
 
           <div className="relative">
-            <IconButton 
-              icon={MoreVertical} 
+            <IconButton
+              icon={MoreVertical}
               onClick={() => setShowMoreDropdown(!showMoreDropdown)}
             />
             {showMoreDropdown && (
@@ -412,7 +412,7 @@ export default function RateCardManagement() {
             )}
           </div>
 
-          <ViewModeSwitcher 
+          <ViewModeSwitcher
             currentMode={viewMode}
             onChange={setViewMode}
           />

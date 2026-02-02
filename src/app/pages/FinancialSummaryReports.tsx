@@ -6,17 +6,15 @@ import {
   SummaryWidgets,
   SearchBar,
   Pagination,
-  StatusFilter,
-  DateRangeFilter,
+  AdvancedSearchPanel,
+  FilterChips,
 } from "../components/hb/listing";
+import type { FilterCondition } from "../components/hb/listing";
 import { toast } from "sonner";
 
 export default function FinancialSummaryReports() {
-  const [dateRange, setDateRange] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [showDateRangePicker, setShowDateRangePicker] = useState(false);
-  const [reportType, setReportType] = useState("all");
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [filters, setFilters] = useState<FilterCondition[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSummary, setShowSummary] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -131,23 +129,28 @@ export default function FinancialSummaryReports() {
     },
   ];
 
-  const reportTypeOptions = [
-    { value: "all", label: "All Periods", count: 12 },
-    { value: "summary", label: "Summary View", count: 12 },
-    { value: "detailed", label: "Detailed View", count: 12 },
-    { value: "comparison", label: "Comparison View", count: 12 },
-  ];
-
-  const handleRefreshData = () => {
-    toast.success("Refreshing data...");
+  const filterOptions = {
+    'View Type': ['Summary View', 'Detailed View', 'Comparison View'],
+    'Date Range': ['Today', 'Yesterday', 'Last 7 Days', 'Last 30 Days', 'This Month', 'Last Month', 'This Quarter', 'This Year'],
   };
 
-  const handleDateRangeApply = (start: string, end: string, label?: string) => {
-    setStartDate(start);
-    setEndDate(end);
-    setDateRange(label || `${start} to ${end}`);
-    toast.success(`Date range applied: ${label || `${start} to ${end}`}`);
-  };
+  const filteredData = reportData.filter(item => {
+    const matchesSearch = searchQuery === "" ||
+      item.month.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesFilters = filters.every(filter => {
+      if (filter.values.length === 0) return true;
+      // Filter logic here if needed
+      return true;
+    });
+
+    return matchesSearch && matchesFilters;
+  });
+
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
     <div className="px-6 py-8 bg-white dark:bg-neutral-950">
@@ -155,7 +158,7 @@ export default function FinancialSummaryReports() {
         {/* ========== PAGE HEADER ========== */}
         <PageHeader
           title="Financial Summary Reports"
-          subtitle="Monthly financial performance and profitability analysis"
+          subtitle="Monthly financial performance and profitability summary"
           breadcrumbs={[
             { label: "Reports", href: "#" },
             { label: "Financial Summary", current: true },
@@ -169,47 +172,51 @@ export default function FinancialSummaryReports() {
             onPrint: () => window.print(),
           }}
         >
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search periods..."
-          />
-
           <div className="relative">
-            <IconButton
-              icon={Calendar}
-              onClick={() => setShowDateRangePicker(!showDateRangePicker)}
-              tooltip={dateRange || "Select Date Range"}
-              active={!!dateRange}
+            <SearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              onAdvancedSearch={() => setShowAdvancedSearch(true)}
+              activeFilterCount={filters.filter(f => f.values.length > 0).length}
+              placeholder="Search month..."
             />
-            <DateRangeFilter
-              isOpen={showDateRangePicker}
-              onClose={() => setShowDateRangePicker(false)}
-              startDate={startDate}
-              endDate={endDate}
-              onApply={handleDateRangeApply}
+
+            <AdvancedSearchPanel
+              isOpen={showAdvancedSearch}
+              onClose={() => setShowAdvancedSearch(false)}
+              filters={filters}
+              onFiltersChange={setFilters}
+              filterOptions={filterOptions}
             />
           </div>
-
-          <StatusFilter
-            currentStatus={reportType}
-            statuses={reportTypeOptions}
-            onChange={setReportType}
-          />
 
           <IconButton
             icon={BarChart3}
             onClick={() => setShowSummary(!showSummary)}
-            tooltip="Toggle Summary"
             active={showSummary}
+            title="Toggle summary"
           />
-
           <IconButton
             icon={RefreshCw}
-            onClick={handleRefreshData}
-            tooltip="Refresh Data"
+            onClick={() => toast.success("Refreshed")}
+            title="Refresh"
           />
         </PageHeader>
+
+        {/* ========== FILTER CHIPS ========== */}
+        {filters.some((f) => f.values.length > 0) && (
+          <FilterChips
+            filters={filters}
+            onRemove={(filterId) => {
+              setFilters(
+                filters.map((f) =>
+                  f.id === filterId ? { ...f, values: [] } : f
+                )
+              );
+            }}
+            onClearAll={() => setFilters([])}
+          />
+        )}
 
         {/* ========== SUMMARY WIDGETS ========== */}
         {showSummary && (
@@ -252,53 +259,45 @@ export default function FinancialSummaryReports() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
-                {reportData
-                  .filter((row) => {
-                    if (searchQuery) {
-                      const query = searchQuery.toLowerCase();
-                      return row.month.toLowerCase().includes(query);
-                    }
-                    return true;
-                  })
-                  .map((row, index) => (
-                    <tr
-                      key={index}
-                      className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors"
-                    >
-                      <td className="px-4 py-3 text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                        {row.month}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-right text-neutral-700 dark:text-neutral-300 font-medium">
-                        {row.totalRevenue}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-right text-neutral-700 dark:text-neutral-300">
-                        {row.totalInvoiced}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-right text-success-600 dark:text-success-400 font-medium">
-                        {row.totalReceived}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-right text-warning-600 dark:text-warning-400 font-medium">
-                        {row.pendingReceivables}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-right text-neutral-700 dark:text-neutral-300">
-                        {row.driverPayables}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-right text-primary-600 dark:text-primary-400 font-semibold">
-                        {row.netProfit}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-right text-neutral-700 dark:text-neutral-300 font-medium">
-                        {row.profitMargin}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-center">
-                        <div className="text-neutral-700 dark:text-neutral-300">
-                          <span className="font-medium">{row.invoicesIssued}</span> issued
-                        </div>
-                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                          {row.invoicesPaid} paid, {row.invoicesPending} pending
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                {paginatedData.map((row, index) => (
+                  <tr
+                    key={index}
+                    className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors"
+                  >
+                    <td className="px-4 py-3 text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                      {row.month}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-right text-neutral-700 dark:text-neutral-300 font-medium">
+                      {row.totalRevenue}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-right text-neutral-700 dark:text-neutral-300">
+                      {row.totalInvoiced}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-right text-success-600 dark:text-success-400 font-medium">
+                      {row.totalReceived}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-right text-warning-600 dark:text-warning-400 font-medium">
+                      {row.pendingReceivables}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-right text-neutral-700 dark:text-neutral-300">
+                      {row.driverPayables}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-right text-primary-600 dark:text-primary-400 font-semibold">
+                      {row.netProfit}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-right text-neutral-700 dark:text-neutral-300 font-medium">
+                      {row.profitMargin}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-center">
+                      <div className="text-neutral-700 dark:text-neutral-300">
+                        <span className="font-medium">{row.invoicesIssued}</span> issued
+                      </div>
+                      <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                        {row.invoicesPaid} paid, {row.invoicesPending} pending
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
               <tfoot className="bg-neutral-100 dark:bg-neutral-800/50 border-t-2 border-neutral-300 dark:border-neutral-700">
                 <tr className="font-semibold">
@@ -338,10 +337,11 @@ export default function FinancialSummaryReports() {
         {/* ========== PAGINATION ========== */}
         <Pagination
           currentPage={currentPage}
-          totalItems={12}
+          totalItems={filteredData.length}
           itemsPerPage={itemsPerPage}
           onPageChange={setCurrentPage}
           onItemsPerPageChange={setItemsPerPage}
+          totalPages={Math.ceil(filteredData.length / itemsPerPage)}
         />
       </div>
     </div>

@@ -6,18 +6,15 @@ import {
   SummaryWidgets,
   SearchBar,
   Pagination,
-  StatusFilter,
-  DateRangeFilter,
+  AdvancedSearchPanel,
+  FilterChips,
 } from "../components/hb/listing";
+import type { FilterCondition } from "../components/hb/listing";
 import { toast } from "sonner";
 
 export default function OperationalReports() {
-  const [dateRange, setDateRange] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [showDateRangePicker, setShowDateRangePicker] = useState(false);
-  const [serviceFilter, setServiceFilter] = useState("all");
-  const [deliveryStatusFilter, setDeliveryStatusFilter] = useState("all");
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [filters, setFilters] = useState<FilterCondition[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSummary, setShowSummary] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -158,19 +155,11 @@ export default function OperationalReports() {
     },
   ];
 
-  const serviceFilterOptions = [
-    { value: "all", label: "All Services", count: 1247 },
-    { value: "express", label: "Express Delivery", count: 450 },
-    { value: "standard", label: "Standard Delivery", count: 520 },
-    { value: "same-day", label: "Same Day Delivery", count: 277 },
-  ];
-
-  const statusFilterOptions = [
-    { value: "all", label: "All Statuses", count: 1247 },
-    { value: "delivered", label: "Delivered", count: 1089 },
-    { value: "in-transit", label: "In Transit", count: 95 },
-    { value: "pending", label: "Pending Quote", count: 63 },
-  ];
+  const filterOptions = {
+    'Service': ['Express Delivery', 'Standard Delivery', 'Same Day Delivery'],
+    'Status': ['Delivered', 'In Transit', 'Pending Quote'],
+    'Date Range': ['Today', 'Yesterday', 'Last 7 Days', 'Last 30 Days', 'This Month', 'Last Month'],
+  };
 
   const getSlaStatusColor = (status: string) => {
     switch (status) {
@@ -200,16 +189,36 @@ export default function OperationalReports() {
     }
   };
 
-  const handleRefreshData = () => {
-    toast.success("Refreshing data...");
-  };
+  const filteredData = reportData.filter(item => {
+    const matchesSearch = searchQuery === "" ||
+      item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.customer.toLowerCase().includes(searchQuery.toLowerCase());
 
-  const handleDateRangeApply = (start: string, end: string, label?: string) => {
-    setStartDate(start);
-    setEndDate(end);
-    setDateRange(label || `${start} to ${end}`);
-    toast.success(`Date range applied: ${label || `${start} to ${end}`}`);
-  };
+    const matchesFilters = filters.every(filter => {
+      if (filter.values.length === 0) return true; // No values selected for this filter
+
+      switch (filter.field) {
+        case 'Service':
+          return filter.values.includes(item.service);
+        case 'Status':
+          return filter.values.includes(item.status);
+        case 'Date Range':
+          // Implement date range filtering logic here based on item.date and filter.values
+          // For now, we'll just return true if a date range filter is present but not fully implemented
+          // This would typically involve parsing dates and comparing
+          return true;
+        default:
+          return true;
+      }
+    });
+
+    return matchesSearch && matchesFilters;
+  });
+
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
     <div className="px-6 py-8 bg-white dark:bg-neutral-950">
@@ -231,53 +240,51 @@ export default function OperationalReports() {
             onPrint: () => window.print(),
           }}
         >
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search inquiries..."
-          />
-
           <div className="relative">
-            <IconButton
-              icon={Calendar}
-              onClick={() => setShowDateRangePicker(!showDateRangePicker)}
-              tooltip={dateRange || "Select Date Range"}
-              active={!!dateRange}
+            <SearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              onAdvancedSearch={() => setShowAdvancedSearch(true)}
+              activeFilterCount={filters.filter(f => f.values.length > 0).length}
+              placeholder="Search inquiries..."
             />
-            <DateRangeFilter
-              isOpen={showDateRangePicker}
-              onClose={() => setShowDateRangePicker(false)}
-              startDate={startDate}
-              endDate={endDate}
-              onApply={handleDateRangeApply}
+
+            <AdvancedSearchPanel
+              isOpen={showAdvancedSearch}
+              onClose={() => setShowAdvancedSearch(false)}
+              filters={filters}
+              onFiltersChange={setFilters}
+              filterOptions={filterOptions}
             />
           </div>
-
-          <StatusFilter
-            currentStatus={serviceFilter}
-            statuses={serviceFilterOptions}
-            onChange={setServiceFilter}
-          />
-
-          <StatusFilter
-            currentStatus={deliveryStatusFilter}
-            statuses={statusFilterOptions}
-            onChange={setDeliveryStatusFilter}
-          />
 
           <IconButton
             icon={BarChart3}
             onClick={() => setShowSummary(!showSummary)}
-            tooltip="Toggle Summary"
             active={showSummary}
+            title="Toggle summary"
           />
-
           <IconButton
             icon={RefreshCw}
-            onClick={handleRefreshData}
-            tooltip="Refresh Data"
+            onClick={() => toast.success("Refreshed")}
+            title="Refresh"
           />
         </PageHeader>
+
+        {/* ========== FILTER CHIPS ========== */}
+        {filters.some((f) => f.values.length > 0) && (
+          <FilterChips
+            filters={filters}
+            onRemove={(filterId) => {
+              setFilters(
+                filters.map((f) =>
+                  f.id === filterId ? { ...f, values: [] } : f
+                )
+              );
+            }}
+            onClearAll={() => setFilters([])}
+          />
+        )}
 
         {/* ========== SUMMARY WIDGETS ========== */}
         {showSummary && (
@@ -323,87 +330,55 @@ export default function OperationalReports() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
-                {reportData
-                  .filter((row) => {
-                    // Filter by service
-                    if (serviceFilter !== "all") {
-                      const serviceMap: Record<string, string> = {
-                        express: "Express Delivery",
-                        standard: "Standard Delivery",
-                        "same-day": "Same Day Delivery",
-                      };
-                      if (row.service !== serviceMap[serviceFilter]) return false;
-                    }
-                    // Filter by delivery status
-                    if (deliveryStatusFilter !== "all") {
-                      const statusMap: Record<string, string> = {
-                        delivered: "Delivered",
-                        "in-transit": "In Transit",
-                        pending: "Pending Quote",
-                      };
-                      if (row.status !== statusMap[deliveryStatusFilter]) return false;
-                    }
-                    // Filter by search query
-                    if (searchQuery) {
-                      const query = searchQuery.toLowerCase();
-                      return (
-                        row.id.toLowerCase().includes(query) ||
-                        row.customer.toLowerCase().includes(query) ||
-                        row.origin.toLowerCase().includes(query) ||
-                        row.destination.toLowerCase().includes(query)
-                      );
-                    }
-                    return true;
-                  })
-                  .map((row) => (
-                    <tr
-                      key={row.id}
-                      className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors"
-                    >
-                      <td className="px-4 py-3 text-sm font-medium text-primary-600 dark:text-primary-400">
-                        {row.id}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
-                        {row.date}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
-                        {row.customer}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
-                        {row.origin} → {row.destination}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
-                        {row.service}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border ${getStatusColor(
-                            row.status
-                          )}`}
-                        >
-                          {row.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
-                        {row.responseTime}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
-                        {row.quoteTime}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
-                        {row.deliveryTime}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border ${getSlaStatusColor(
-                            row.slaStatus
-                          )}`}
-                        >
-                          {row.slaStatus}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                {paginatedData.map((row) => (
+                  <tr
+                    key={row.id}
+                    className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors"
+                  >
+                    <td className="px-4 py-3 text-sm font-medium text-primary-600 dark:text-primary-400">
+                      {row.id}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
+                      {row.date}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
+                      {row.customer}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
+                      {row.origin} → {row.destination}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
+                      {row.service}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border ${getStatusColor(
+                          row.status
+                        )}`}
+                      >
+                        {row.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
+                      {row.responseTime}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
+                      {row.quoteTime}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
+                      {row.deliveryTime}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border ${getSlaStatusColor(
+                          row.slaStatus
+                        )}`}
+                      >
+                        {row.slaStatus}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -412,10 +387,11 @@ export default function OperationalReports() {
         {/* ========== PAGINATION ========== */}
         <Pagination
           currentPage={currentPage}
-          totalItems={247}
+          totalItems={filteredData.length}
           itemsPerPage={itemsPerPage}
           onPageChange={setCurrentPage}
           onItemsPerPageChange={setItemsPerPage}
+          totalPages={Math.ceil(filteredData.length / itemsPerPage)}
         />
       </div>
     </div>

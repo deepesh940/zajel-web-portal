@@ -194,43 +194,11 @@ export default function PricingRuleMaster() {
   ]);
 
   // Filter options for advanced search
-  const filterOptions: FilterCondition[] = [
-    {
-      id: "status",
-      label: "Status",
-      type: "select",
-      values: [],
-      options: [
-        { value: "Active", label: "Active" },
-        { value: "Inactive", label: "Inactive" },
-      ],
-    },
-    {
-      id: "ruleType",
-      label: "Rule Type",
-      type: "select",
-      values: [],
-      options: [
-        { value: "Base Rate", label: "Base Rate" },
-        { value: "Distance-Based", label: "Distance-Based" },
-        { value: "Weight-Based", label: "Weight-Based" },
-        { value: "Time-Based", label: "Time-Based" },
-        { value: "Surcharge", label: "Surcharge" },
-      ],
-    },
-    {
-      id: "applicability",
-      label: "Applicability",
-      type: "select",
-      values: [],
-      options: [
-        { value: "All Services", label: "All Services" },
-        { value: "Express Only", label: "Express Only" },
-        { value: "Standard Only", label: "Standard Only" },
-        { value: "Custom", label: "Custom" },
-      ],
-    },
-  ];
+  const filterOptions: Record<string, string[]> = {
+    "Status": ["Active", "Inactive"],
+    "Rule Type": ["Base Rate", "Distance-Based", "Weight-Based", "Time-Based", "Surcharge"],
+    "Applicability": ["All Services", "Express Only", "Standard Only", "Custom"],
+  };
 
   // Apply filters
   const filteredRules = pricingRules.filter((rule) => {
@@ -239,15 +207,15 @@ export default function PricingRuleMaster() {
       rule.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
       rule.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const statusFilter = filters.find((f) => f.id === "status");
+    const statusFilter = filters.find((f) => f.field === "Status");
     const matchesStatus =
       !statusFilter || statusFilter.values.length === 0 || statusFilter.values.includes(rule.status);
 
-    const ruleTypeFilter = filters.find((f) => f.id === "ruleType");
+    const ruleTypeFilter = filters.find((f) => f.field === "Rule Type");
     const matchesRuleType =
       !ruleTypeFilter || ruleTypeFilter.values.length === 0 || ruleTypeFilter.values.includes(rule.ruleType);
 
-    const applicabilityFilter = filters.find((f) => f.id === "applicability");
+    const applicabilityFilter = filters.find((f) => f.field === "Applicability");
     const matchesApplicability =
       !applicabilityFilter || applicabilityFilter.values.length === 0 || applicabilityFilter.values.includes(rule.applicability);
 
@@ -280,9 +248,8 @@ export default function PricingRuleMaster() {
     return (
       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
         <div
-          className={`w-1.5 h-1.5 rounded-full ${
-            status === "Active" ? "bg-success-500" : "bg-neutral-400"
-          }`}
+          className={`w-1.5 h-1.5 rounded-full ${status === "Active" ? "bg-success-500" : "bg-neutral-400"
+            }`}
         ></div>
         <span className="text-xs text-neutral-600 dark:text-neutral-400">{status}</span>
       </span>
@@ -371,20 +338,20 @@ export default function PricingRuleMaster() {
         pricingRules.map((r) =>
           r.id === editingRule.id
             ? {
-                ...r,
-                code: formCode,
-                name: formName,
-                description: formDescription,
-                ruleType: formRuleType,
-                applicability: formApplicability,
-                calculationMethod: formCalculationMethod,
-                value: parseFloat(formValue),
-                unit: formUnit,
-                priority: parseInt(formPriority),
-                status: formStatus,
-                effectiveFrom: formEffectiveFrom,
-                modifiedDate: new Date().toISOString().split("T")[0],
-              }
+              ...r,
+              code: formCode,
+              name: formName,
+              description: formDescription,
+              ruleType: formRuleType,
+              applicability: formApplicability,
+              calculationMethod: formCalculationMethod,
+              value: parseFloat(formValue),
+              unit: formUnit,
+              priority: parseInt(formPriority),
+              status: formStatus,
+              effectiveFrom: formEffectiveFrom,
+              modifiedDate: new Date().toISOString().split("T")[0],
+            }
             : r
         )
       );
@@ -455,12 +422,7 @@ export default function PricingRuleMaster() {
             onClick: handleAddNew,
           }}
           moreMenu={{
-            onImport: () => toast.success("Import functionality"),
-            exportOptions: {
-              onExportCSV: () => toast.success("Exporting as CSV..."),
-              onExportExcel: () => toast.success("Exporting as Excel..."),
-              onExportPDF: () => toast.success("Exporting as PDF..."),
-            },
+
             onPrint: () => window.print(),
             sortOptions: [
               { value: "name", label: "Name (A-Z)", direction: "asc" },
@@ -523,7 +485,7 @@ export default function PricingRuleMaster() {
                 )
               );
             }}
-            onClearAll={() => setFilters(filterOptions.map((f) => ({ ...f, values: [] })))}
+            onClearAll={() => setFilters([])}
           />
         )}
 
@@ -933,11 +895,11 @@ export default function PricingRuleMaster() {
           {filteredRules.length > 0 && (
             <Pagination
               currentPage={currentPage}
-              totalPages={totalPages}
               totalItems={filteredRules.length}
               itemsPerPage={itemsPerPage}
               onPageChange={setCurrentPage}
               onItemsPerPageChange={setItemsPerPage}
+              totalPages={Math.ceil(filteredRules.length / itemsPerPage)}
             />
           )}
         </div>

@@ -197,31 +197,10 @@ export default function SystemConfiguration() {
   ]);
 
   // Filter options for advanced search
-  const filterOptions: FilterCondition[] = [
-    {
-      id: "status",
-      label: "Status",
-      type: "select",
-      values: [],
-      options: [
-        { value: "Active", label: "Active" },
-        { value: "Inactive", label: "Inactive" },
-      ],
-    },
-    {
-      id: "category",
-      label: "Category",
-      type: "select",
-      values: [],
-      options: [
-        { value: "General", label: "General" },
-        { value: "Operations", label: "Operations" },
-        { value: "Finance", label: "Finance" },
-        { value: "Communication", label: "Communication" },
-        { value: "Security", label: "Security" },
-      ],
-    },
-  ];
+  const filterOptions = {
+    'Status': ['Active', 'Inactive'],
+    'Category': ['General', 'Operations', 'Finance', 'Communication', 'Security'],
+  };
 
   // Apply filters
   const filteredModules = configModules.filter((module) => {
@@ -265,9 +244,8 @@ export default function SystemConfiguration() {
     return (
       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
         <div
-          className={`w-1.5 h-1.5 rounded-full ${
-            status === "Active" ? "bg-success-500" : "bg-neutral-400"
-          }`}
+          className={`w-1.5 h-1.5 rounded-full ${status === "Active" ? "bg-success-500" : "bg-neutral-400"
+            }`}
         ></div>
         <span className="text-xs text-neutral-600 dark:text-neutral-400">{status}</span>
       </span>
@@ -309,10 +287,10 @@ export default function SystemConfiguration() {
         configModules.map((m) =>
           m.id === selectedModule.id
             ? {
-                ...m,
-                lastModified: new Date().toISOString().split("T")[0],
-                modifiedBy: "Current User",
-              }
+              ...m,
+              lastModified: new Date().toISOString().split("T")[0],
+              modifiedBy: "Current User",
+            }
             : m
         )
       );
@@ -814,6 +792,14 @@ export default function SystemConfiguration() {
             { label: "System Configuration", current: true },
           ]}
         >
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="px-4 py-2 text-sm font-medium bg-primary-600 hover:bg-primary-700 text-white rounded-lg flex items-center gap-2 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add Module
+          </button>
+
           <div className="relative">
             <SearchBar
               value={searchQuery}
@@ -832,27 +818,6 @@ export default function SystemConfiguration() {
             />
           </div>
 
-          <IconButton
-            icon={BarChart3}
-            onClick={() => setShowSummary(!showSummary)}
-            title="Toggle summary"
-            active={showSummary}
-          />
-
-          <IconButton
-            icon={RefreshCw}
-            onClick={() => toast.success("Refreshed")}
-            title="Refresh"
-          />
-
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="px-4 py-2 text-sm font-medium bg-primary-600 hover:bg-primary-700 text-white rounded-lg flex items-center gap-2 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Add Module
-          </button>
-
           <ViewModeSwitcher currentMode={viewMode} onChange={setViewMode} />
         </PageHeader>
 
@@ -867,7 +832,7 @@ export default function SystemConfiguration() {
                 )
               );
             }}
-            onClearAll={() => setFilters(filterOptions.map((f) => ({ ...f, values: [] })))}
+            onClearAll={() => setFilters([])}
           />
         )}
 

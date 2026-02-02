@@ -52,11 +52,11 @@ interface SLARecord {
   targetQuoteTime: string;
   actualQuoteTime?: string;
   currentStage:
-    | "Inquiry Received"
-    | "Under Review"
-    | "Quote Prepared"
-    | "Quote Sent"
-    | "Completed";
+  | "Inquiry Received"
+  | "Under Review"
+  | "Quote Prepared"
+  | "Quote Sent"
+  | "Completed";
   slaStatus: "On Time" | "At Risk" | "Breached";
   timeRemaining: string;
   breachReason?: string;
@@ -151,6 +151,7 @@ export default function SLAMonitoring() {
       serviceType: "Standard Delivery",
       submittedDate: "2024-01-27T11:20:00",
       targetResponseTime: "2024-01-27T15:20:00",
+      targetQuoteTime: "2024-01-27T17:20:00",
       currentStage: "Inquiry Received",
       slaStatus: "At Risk",
       timeRemaining: "1h 15m",
@@ -174,37 +175,22 @@ export default function SLAMonitoring() {
   ]);
 
   // Filter options
-  const filterOptions = [
-    {
-      id: "slaStatus",
-      label: "SLA Status",
-      field: "SLA Status",
-      options: ["On Time", "At Risk", "Breached"],
-    },
-    {
-      id: "currentStage",
-      label: "Current Stage",
-      field: "Current Stage",
-      options: [
-        "Inquiry Received",
-        "Under Review",
-        "Quote Prepared",
-        "Quote Sent",
-        "Completed",
-      ],
-    },
-    {
-      id: "serviceType",
-      label: "Service Type",
-      field: "Service Type",
-      options: [
-        "Express Delivery",
-        "Standard Delivery",
-        "Same Day Delivery",
-        "Economy Delivery",
-      ],
-    },
-  ];
+  const filterOptions: Record<string, string[]> = {
+    "SLA Status": ["On Time", "At Risk", "Breached"],
+    "Current Stage": [
+      "Inquiry Received",
+      "Under Review",
+      "Quote Prepared",
+      "Quote Sent",
+      "Completed",
+    ],
+    "Service Type": [
+      "Express Delivery",
+      "Standard Delivery",
+      "Same Day Delivery",
+      "Economy Delivery",
+    ],
+  };
 
   // Filter and search logic
   const filteredRecords = useMemo(() => {
@@ -280,15 +266,14 @@ export default function SLAMonitoring() {
     return (
       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
         <div
-          className={`w-1.5 h-1.5 rounded-full ${
-            getSLAColor(status) === "success"
-              ? "bg-success-500"
-              : getSLAColor(status) === "warning"
+          className={`w-1.5 h-1.5 rounded-full ${getSLAColor(status) === "success"
+            ? "bg-success-500"
+            : getSLAColor(status) === "warning"
               ? "bg-warning-500"
               : getSLAColor(status) === "error"
-              ? "bg-error-500"
-              : "bg-neutral-400"
-          }`}
+                ? "bg-error-500"
+                : "bg-neutral-400"
+            }`}
         ></div>
         <span className="text-xs text-neutral-600 dark:text-neutral-400">
           {status}
@@ -301,17 +286,16 @@ export default function SLAMonitoring() {
     return (
       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
         <div
-          className={`w-1.5 h-1.5 rounded-full ${
-            getStageColor(stage) === "success"
-              ? "bg-success-500"
-              : getStageColor(stage) === "warning"
+          className={`w-1.5 h-1.5 rounded-full ${getStageColor(stage) === "success"
+            ? "bg-success-500"
+            : getStageColor(stage) === "warning"
               ? "bg-warning-500"
               : getStageColor(stage) === "error"
-              ? "bg-error-500"
-              : getStageColor(stage) === "info"
-              ? "bg-info-500"
-              : "bg-neutral-400"
-          }`}
+                ? "bg-error-500"
+                : getStageColor(stage) === "info"
+                  ? "bg-info-500"
+                  : "bg-neutral-400"
+            }`}
         ></div>
         <span className="text-xs text-neutral-600 dark:text-neutral-400">
           {stage}
@@ -408,12 +392,7 @@ export default function SLAMonitoring() {
             icon: Plus,
           }}
           moreMenu={{
-            onImport: () => toast.success("Import functionality"),
-            exportOptions: {
-              onExportCSV: () => toast.success("Exporting as CSV..."),
-              onExportExcel: () => toast.success("Exporting as Excel..."),
-              onExportPDF: () => toast.success("Exporting as PDF..."),
-            },
+
             onPrint: () => window.print(),
             sortOptions: [
               {
@@ -567,52 +546,52 @@ export default function SLAMonitoring() {
                     <div className="flex items-center gap-3">
                       {getSLABadge(record.slaStatus)}
                       {getStageBadge(record.currentStage)}
-                      
+
                       <div className="relative ml-2">
                         <button
-                        onClick={() =>
-                          setOpenActionMenuId(
-                            openActionMenuId === record.id ? null : record.id
-                          )
-                        }
-                        className="w-8 h-8 flex items-center justify-center text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded transition-colors"
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
+                          onClick={() =>
+                            setOpenActionMenuId(
+                              openActionMenuId === record.id ? null : record.id
+                            )
+                          }
+                          className="w-8 h-8 flex items-center justify-center text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded transition-colors"
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </button>
 
-                      {openActionMenuId === record.id && (
-                        <div className="absolute right-0 top-full mt-1 w-56 bg-white dark:bg-neutral-950 rounded-lg border border-neutral-200 dark:border-neutral-800 shadow-lg overflow-hidden z-50">
-                          <button
-                            onClick={() => {
-                              handleViewDetails(record);
-                              setOpenActionMenuId(null);
-                            }}
-                            className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2"
-                          >
-                            <Eye className="w-4 h-4" />
-                            View Details
-                          </button>
-                          {record.slaStatus === "At Risk" && (
+                        {openActionMenuId === record.id && (
+                          <div className="absolute right-0 top-full mt-1 w-56 bg-white dark:bg-neutral-950 rounded-lg border border-neutral-200 dark:border-neutral-800 shadow-lg overflow-hidden z-50">
                             <button
-                              onClick={() => handleSendAlert(record)}
+                              onClick={() => {
+                                handleViewDetails(record);
+                                setOpenActionMenuId(null);
+                              }}
                               className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2"
                             >
-                              <Bell className="w-4 h-4" />
-                              Send Alert
+                              <Eye className="w-4 h-4" />
+                              View Details
                             </button>
-                          )}
-                          <button
-                            onClick={() => {
-                              handleCopyInquiryNumber(record.inquiryNumber);
-                              setOpenActionMenuId(null);
-                            }}
-                            className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2"
-                          >
-                            <Copy className="w-4 h-4" />
-                            Copy Inquiry Number
-                          </button>
-                        </div>
-                      )}
+                            {record.slaStatus === "At Risk" && (
+                              <button
+                                onClick={() => handleSendAlert(record)}
+                                className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2"
+                              >
+                                <Bell className="w-4 h-4" />
+                                Send Alert
+                              </button>
+                            )}
+                            <button
+                              onClick={() => {
+                                handleCopyInquiryNumber(record.inquiryNumber);
+                                setOpenActionMenuId(null);
+                              }}
+                              className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors flex items-center gap-2"
+                            >
+                              <Copy className="w-4 h-4" />
+                              Copy Inquiry Number
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -645,7 +624,7 @@ export default function SLAMonitoring() {
                         </button>
                         {getSLABadge(record.slaStatus)}
                         {getStageBadge(record.currentStage)}
-                        
+
                         {/* Three-dot menu beside status badges */}
                         <div className="relative ml-auto">
                           <button

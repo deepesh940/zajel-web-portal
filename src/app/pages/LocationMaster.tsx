@@ -9,8 +9,6 @@ import {
   Plus,
   BarChart3,
   RefreshCw,
-  Upload,
-  Download,
   Printer,
   Eye,
   Edit2,
@@ -192,11 +190,11 @@ export default function LocationMaster() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
-  
+
   // Action menu state
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
 
@@ -235,7 +233,7 @@ export default function LocationMaster() {
       loc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       loc.nameArabic.includes(searchQuery) ||
       loc.code.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     // Apply advanced filters
     const matchesFilters = filters.every(filter => {
       if (filter.field === 'Status') {
@@ -253,7 +251,7 @@ export default function LocationMaster() {
       }
       return true;
     });
-    
+
     return matchesSearch && matchesFilters;
   });
 
@@ -357,7 +355,14 @@ export default function LocationMaster() {
             { label: 'Master Data', href: '#' },
             { label: 'Location Master', current: true },
           ]}
+          moreMenu={{
+            onPrint: () => window.print(),
+          }}
         >
+          <PrimaryButton icon={Plus} onClick={handleAdd}>
+            Add Location
+          </PrimaryButton>
+
           <div className="relative">
             <SearchBar
               value={searchQuery}
@@ -376,44 +381,18 @@ export default function LocationMaster() {
             />
           </div>
 
-          <PrimaryButton icon={Plus} onClick={handleAdd}>
-            Add Location
-          </PrimaryButton>
-
           <IconButton icon={BarChart3} onClick={() => setShowSummary(!showSummary)} active={showSummary} />
 
-          <IconButton icon={RefreshCw} onClick={() => {}} />
+          <IconButton icon={RefreshCw} onClick={() => { }} />
 
-          <div className="relative">
-            <IconButton 
-              icon={MoreVertical} 
-              onClick={() => setShowMoreDropdown(!showMoreDropdown)}
-            />
 
-            {showMoreDropdown && (
-              <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg py-1 z-50">
-                <button className="w-full px-4 py-2 text-left text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 flex items-center gap-2">
-                  <Upload className="w-4 h-4" />
-                  <span className="text-sm">Import</span>
-                </button>
-                <button className="w-full px-4 py-2 text-left text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 flex items-center gap-2">
-                  <Download className="w-4 h-4" />
-                  <span className="text-sm">Export</span>
-                </button>
-                <button className="w-full px-4 py-2 text-left text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 flex items-center gap-2">
-                  <Printer className="w-4 h-4" />
-                  <span className="text-sm">Print</span>
-                </button>
-              </div>
-            )}
-          </div>
 
-          <ViewModeSwitcher 
+          <ViewModeSwitcher
             currentMode={viewMode}
             onChange={setViewMode}
           />
         </PageHeader>
-        
+
         {/* ========== SUMMARY WIDGETS ========== */}
         {showSummary && (
           <SummaryWidgets

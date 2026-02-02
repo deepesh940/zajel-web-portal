@@ -41,7 +41,10 @@ import {
   ViewModeSwitcher,
   SearchBar,
   Pagination,
+  AdvancedSearchPanel,
+  FilterChips,
 } from "../components/hb/listing";
+import type { FilterCondition } from "../components/hb/listing";
 import { FormSelect } from "../components/hb/common/Form";
 import { toast } from "sonner";
 
@@ -49,10 +52,14 @@ type ViewMode = "grid" | "list" | "table";
 
 export default function FinancialReports() {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
-  const [dateRange, setDateRange] = useState("this-month");
-  const [reportType, setReportType] = useState("overview");
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [filters, setFilters] = useState<FilterCondition[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [showSummary, setShowSummary] = useState(false);
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [dateRange, setDateRange] = useState("This Month");
+  const [reportType, setReportType] = useState("All Reports");
   // Sample data for charts
   const monthlyRevenueData = [
     {
@@ -157,6 +164,11 @@ export default function FinancialReports() {
     },
   ];
 
+  const filterOptions = {
+    'Report Type': ['Ready', 'Processing'],
+    'Date Range': ['Today', 'Yesterday', 'Last 7 Days', 'Last 30 Days', 'This Month', 'Last Month'],
+  };
+
   const reportsList = [
     {
       id: "1",
@@ -208,6 +220,33 @@ export default function FinancialReports() {
     },
   ];
 
+  const filteredReports = reportsList.filter(report => {
+    const matchesSearch = searchQuery === "" ||
+      report.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      report.description.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesFilters = filters.every(filter => {
+      if (filter.values.length === 0) return true;
+
+      if (filter.field === 'Report Type') {
+        return filter.values.includes(report.status);
+      }
+      // Add more filter conditions here based on your report data structure
+      // For example, if you have a 'date' field in report:
+      // if (filter.field === 'Date Range') {
+      //   return filter.values.some(val => checkDateRange(report.date, val));
+      // }
+      return true;
+    });
+
+    return matchesSearch && matchesFilters;
+  });
+
+  const paginatedReports = filteredReports.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   const getStatusBadge = (status: string) => {
     return (
       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
@@ -247,38 +286,29 @@ export default function FinancialReports() {
             onPrint: () => window.print(),
           }}
         >
-          <div className="flex items-center gap-2">
-            <select
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value)}
-              className="px-3 py-2 text-sm border border-neutral-200 dark:border-neutral-800 rounded-lg bg-white dark:bg-neutral-950 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-            >
-              <option value="this-week">This Week</option>
-              <option value="this-month">This Month</option>
-              <option value="last-month">Last Month</option>
-              <option value="this-quarter">This Quarter</option>
-              <option value="this-year">This Year</option>
-              <option value="custom">Custom Range</option>
-            </select>
+          <div className="relative">
+            <SearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              onAdvancedSearch={() => setShowAdvancedSearch(true)}
+              activeFilterCount={filters.filter(f => f.values.length > 0).length}
+              placeholder="Search reports..."
+            />
 
-            <select
-              value={reportType}
-              onChange={(e) => setReportType(e.target.value)}
-              className="px-3 py-2 text-sm border border-neutral-200 dark:border-neutral-800 rounded-lg bg-white dark:bg-neutral-950 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-            >
-              <option value="overview">Overview</option>
-              <option value="revenue">Revenue</option>
-              <option value="expenses">Expenses</option>
-              <option value="profitability">Profitability</option>
-              <option value="receivables">Receivables</option>
-            </select>
+            <AdvancedSearchPanel
+              isOpen={showAdvancedSearch}
+              onClose={() => setShowAdvancedSearch(false)}
+              filters={filters}
+              onFiltersChange={setFilters}
+              filterOptions={filterOptions}
+            />
           </div>
 
           <IconButton
             icon={BarChart3}
             onClick={() => setShowSummary(!showSummary)}
-            title="Toggle summary"
             active={showSummary}
+            title="Toggle summary"
           />
 
           <IconButton
@@ -585,7 +615,7 @@ export default function FinancialReports() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
-                    {reportsList.map((report) => (
+                    {paginatedReports.map((report) => (
                       <tr
                         key={report.id}
                         className="hover:bg-neutral-50 dark:hover:bg-neutral-900/50"

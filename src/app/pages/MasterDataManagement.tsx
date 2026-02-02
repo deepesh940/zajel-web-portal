@@ -194,12 +194,6 @@ export default function MasterDataManagement() {
             { label: "Master Data Management", current: true },
           ]}
           moreMenu={{
-            onImport: () => toast.success("Import functionality"),
-            exportOptions: {
-              onExportCSV: () => toast.success("Exporting as CSV..."),
-              onExportExcel: () => toast.success("Exporting as Excel..."),
-              onExportPDF: () => toast.success("Exporting as PDF..."),
-            },
             onPrint: () => window.print(),
           }}
         >
@@ -232,7 +226,7 @@ export default function MasterDataManagement() {
                   Select a Category to Manage
                 </h3>
                 <p className="text-sm text-info-700 dark:text-info-400">
-                  Choose from the categories below to view, create, edit, or delete master data records. 
+                  Choose from the categories below to view, create, edit, or delete master data records.
                   Each category contains essential system configurations that power the ZAJEL platform.
                 </p>
               </div>
@@ -408,9 +402,9 @@ export default function MasterDataManagement() {
                 About Master Data Management
               </h4>
               <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                Master data management provides centralized control over critical business data that 
-                powers the ZAJEL Digital Logistics Platform. Each category contains configurable records 
-                that define how the system operates, from vehicle specifications to pricing rules. 
+                Master data management provides centralized control over critical business data that
+                powers the ZAJEL Digital Logistics Platform. Each category contains configurable records
+                that define how the system operates, from vehicle specifications to pricing rules.
                 Changes made here will immediately affect all related system operations.
               </p>
             </div>

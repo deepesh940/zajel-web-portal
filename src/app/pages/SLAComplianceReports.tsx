@@ -6,17 +6,15 @@ import {
   SummaryWidgets,
   SearchBar,
   Pagination,
-  StatusFilter,
-  DateRangeFilter,
+  AdvancedSearchPanel,
+  FilterChips,
 } from "../components/hb/listing";
+import type { FilterCondition } from "../components/hb/listing";
 import { toast } from "sonner";
 
 export default function SLAComplianceReports() {
-  const [dateRange, setDateRange] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [showDateRangePicker, setShowDateRangePicker] = useState(false);
-  const [slaType, setSlaType] = useState("all");
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [filters, setFilters] = useState<FilterCondition[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSummary, setShowSummary] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -173,12 +171,10 @@ export default function SLAComplianceReports() {
     },
   ];
 
-  const slaTypeOptions = [
-    { value: "all", label: "All SLA Types", count: 25 },
-    { value: "operational", label: "Operational SLAs", count: 15 },
-    { value: "customer-service", label: "Customer Service SLAs", count: 6 },
-    { value: "financial", label: "Financial SLAs", count: 4 },
-  ];
+  const filterOptions = {
+    'SLA Type': ['Operational', 'Customer Service', 'Financial'],
+    'Date Range': ['Today', 'Yesterday', 'Last 7 Days', 'Last 30 Days', 'This Month', 'Last Month'],
+  };
 
   const getSlaStatusColor = (complianceRate: string) => {
     const rate = parseFloat(complianceRate);
@@ -187,16 +183,25 @@ export default function SLAComplianceReports() {
     return "text-danger-600 dark:text-danger-400";
   };
 
-  const handleRefreshData = () => {
-    toast.success("Refreshing data...");
-  };
+  const filteredData = reportData.filter(item => {
+    const matchesSearch = searchQuery === "" ||
+      item.slaCategory.toLowerCase().includes(searchQuery.toLowerCase());
 
-  const handleDateRangeApply = (start: string, end: string, label?: string) => {
-    setStartDate(start);
-    setEndDate(end);
-    setDateRange(label || `${start} to ${end}`);
-    toast.success(`Date range applied: ${label || `${start} to ${end}`}`);
-  };
+    const matchesFilters = filters.every(filter => {
+      if (filter.field === 'SLA Type') {
+        return filter.values.some(v => v.toLowerCase().replace(' ', '-') === item.type);
+      }
+      // Date Range is mock for now since this is a static site
+      return true;
+    });
+
+    return matchesSearch && matchesFilters;
+  });
+
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
     <div className="px-6 py-8 bg-white dark:bg-neutral-950">
@@ -218,47 +223,51 @@ export default function SLAComplianceReports() {
             onPrint: () => window.print(),
           }}
         >
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search SLA categories..."
-          />
-
           <div className="relative">
-            <IconButton
-              icon={Calendar}
-              onClick={() => setShowDateRangePicker(!showDateRangePicker)}
-              tooltip={dateRange || "Select Date Range"}
-              active={!!dateRange}
+            <SearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              onAdvancedSearch={() => setShowAdvancedSearch(true)}
+              activeFilterCount={filters.filter(f => f.values.length > 0).length}
+              placeholder="Search SLA categories..."
             />
-            <DateRangeFilter
-              isOpen={showDateRangePicker}
-              onClose={() => setShowDateRangePicker(false)}
-              startDate={startDate}
-              endDate={endDate}
-              onApply={handleDateRangeApply}
+
+            <AdvancedSearchPanel
+              isOpen={showAdvancedSearch}
+              onClose={() => setShowAdvancedSearch(false)}
+              filters={filters}
+              onFiltersChange={setFilters}
+              filterOptions={filterOptions}
             />
           </div>
-
-          <StatusFilter
-            currentStatus={slaType}
-            statuses={slaTypeOptions}
-            onChange={setSlaType}
-          />
 
           <IconButton
             icon={BarChart3}
             onClick={() => setShowSummary(!showSummary)}
-            tooltip="Toggle Summary"
             active={showSummary}
+            title="Toggle summary"
           />
-
           <IconButton
             icon={RefreshCw}
-            onClick={handleRefreshData}
-            tooltip="Refresh Data"
+            onClick={() => toast.success("Refreshed")}
+            title="Refresh"
           />
         </PageHeader>
+
+        {/* ========== FILTER CHIPS ========== */}
+        {filters.some((f) => f.values.length > 0) && (
+          <FilterChips
+            filters={filters}
+            onRemove={(filterId) => {
+              setFilters(
+                filters.map((f) =>
+                  f.id === filterId ? { ...f, values: [] } : f
+                )
+              );
+            }}
+            onClearAll={() => setFilters([])}
+          />
+        )}
 
         {/* ========== SUMMARY WIDGETS ========== */}
         {showSummary && (
@@ -301,52 +310,40 @@ export default function SLAComplianceReports() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
-                {reportData
-                  .filter((row) => {
-                    if (slaType !== "all" && row.type !== slaType) return false;
-                    if (searchQuery) {
-                      const query = searchQuery.toLowerCase();
-                      return (
-                        row.slaCategory.toLowerCase().includes(query) ||
-                        row.target.toLowerCase().includes(query)
-                      );
-                    }
-                    return true;
-                  })
-                  .map((row, index) => (
-                    <tr
-                      key={index}
-                      className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors"
-                    >
-                      <td className="px-4 py-3 text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                        {row.slaCategory}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
-                        {row.target}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-center text-neutral-700 dark:text-neutral-300">
-                        {row.totalCount}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-center text-success-600 dark:text-success-400 font-medium">
-                        {row.metCount}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-center text-warning-600 dark:text-warning-400 font-medium">
-                        {row.atRiskCount}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-center text-danger-600 dark:text-danger-400 font-medium">
-                        {row.breachedCount}
-                      </td>
-                      <td className={`px-4 py-3 text-sm text-center font-semibold ${getSlaStatusColor(row.complianceRate)}`}>
-                        {row.complianceRate}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
-                        {row.avgActualTime}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-center text-success-600 dark:text-success-400 font-medium">
-                        {row.improvement}
-                      </td>
-                    </tr>
-                  ))}
+                {paginatedData.map((row, index) => (
+                  <tr
+                    key={index}
+                    className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors"
+                  >
+                    <td className="px-4 py-3 text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                      {row.slaCategory}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
+                      {row.target}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-center text-neutral-700 dark:text-neutral-300">
+                      {row.totalCount}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-center text-success-600 dark:text-success-400 font-medium">
+                      {row.metCount}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-center text-warning-600 dark:text-warning-400 font-medium">
+                      {row.atRiskCount}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-center text-danger-600 dark:text-danger-400 font-medium">
+                      {row.breachedCount}
+                    </td>
+                    <td className={`px-4 py-3 text-sm text-center font-semibold ${getSlaStatusColor(row.complianceRate)}`}>
+                      {row.complianceRate}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
+                      {row.avgActualTime}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-center text-success-600 dark:text-success-400 font-medium">
+                      {row.improvement}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -355,10 +352,11 @@ export default function SLAComplianceReports() {
         {/* ========== PAGINATION ========== */}
         <Pagination
           currentPage={currentPage}
-          totalItems={25}
+          totalItems={filteredData.length}
           itemsPerPage={itemsPerPage}
           onPageChange={setCurrentPage}
           onItemsPerPageChange={setItemsPerPage}
+          totalPages={Math.ceil(filteredData.length / itemsPerPage)}
         />
       </div>
     </div>

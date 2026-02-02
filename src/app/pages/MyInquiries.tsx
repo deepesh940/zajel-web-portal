@@ -47,13 +47,13 @@ interface Inquiry {
   id: string;
   inquiryNumber: string;
   status:
-    | "Draft"
-    | "Submitted"
-    | "Quote Sent"
-    | "Quote Approved"
-    | "Quote Rejected"
-    | "Cancelled"
-    | "Completed";
+  | "Draft"
+  | "Submitted"
+  | "Quote Sent"
+  | "Quote Approved"
+  | "Quote Rejected"
+  | "Cancelled"
+  | "Completed";
   serviceType: string;
   from: string;
   to: string;
@@ -249,13 +249,12 @@ export default function MyInquiries() {
   const getStatusBadge = (status: string) => {
     return (
       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
-        <div className={`w-1.5 h-1.5 rounded-full ${
-          getStatusColor(status) === 'success' ? 'bg-success-500' :
-          getStatusColor(status) === 'warning' ? 'bg-warning-500' :
-          getStatusColor(status) === 'error' ? 'bg-error-500' :
-          getStatusColor(status) === 'info' ? 'bg-info-500' :
-          'bg-neutral-400'
-        }`}></div>
+        <div className={`w-1.5 h-1.5 rounded-full ${getStatusColor(status) === 'success' ? 'bg-success-500' :
+            getStatusColor(status) === 'warning' ? 'bg-warning-500' :
+              getStatusColor(status) === 'error' ? 'bg-error-500' :
+                getStatusColor(status) === 'info' ? 'bg-info-500' :
+                  'bg-neutral-400'
+          }`}></div>
         <span className="text-xs text-neutral-600 dark:text-neutral-400">{status}</span>
       </span>
     );
@@ -358,12 +357,6 @@ export default function MyInquiries() {
             { label: "My Inquiries", current: true },
           ]}
           moreMenu={{
-            onImport: () => toast.success("Import functionality"),
-            exportOptions: {
-              onExportCSV: () => toast.success("Exporting as CSV..."),
-              onExportExcel: () => toast.success("Exporting as Excel..."),
-              onExportPDF: () => toast.success("Exporting as PDF..."),
-            },
             onPrint: () => window.print(),
             sortOptions: [
               { value: "inquiryNumber", label: "Inquiry Number (A-Z)", direction: "asc" },
@@ -419,8 +412,8 @@ export default function MyInquiries() {
 
         {/* ========== FILTER CHIPS ========== */}
         {filters.some((f) => f.values.length > 0) && (
-          <FilterChips 
-            filters={filters} 
+          <FilterChips
+            filters={filters}
             onRemove={(filterId) => {
               setFilters(filters.filter(f => f.id !== filterId));
             }}
@@ -538,7 +531,7 @@ export default function MyInquiries() {
                             <Eye className="w-4 h-4" />
                             View Details
                           </button>
-                          
+
                           {inquiry.status === "Quote Sent" && (
                             <button
                               onClick={(e) => {
@@ -552,7 +545,7 @@ export default function MyInquiries() {
                               Review Quote
                             </button>
                           )}
-                          
+
                           {inquiry.status === "Draft" && (
                             <button
                               onClick={(e) => {
@@ -566,7 +559,7 @@ export default function MyInquiries() {
                               Edit
                             </button>
                           )}
-                          
+
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -578,7 +571,7 @@ export default function MyInquiries() {
                             <Copy className="w-4 h-4" />
                             Copy Inquiry Number
                           </button>
-                          
+
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -590,22 +583,22 @@ export default function MyInquiries() {
                             <Download className="w-4 h-4" />
                             Download PDF
                           </button>
-                          
+
                           {(inquiry.status === "Draft" ||
                             inquiry.status === "Submitted" ||
                             inquiry.status === "Quote Sent") && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleCancelInquiry(inquiry);
-                                setOpenActionMenuId(null);
-                              }}
-                              className="w-full px-4 py-2.5 text-left text-sm text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-950 transition-colors border-t border-neutral-200 dark:border-neutral-800 flex items-center gap-2"
-                            >
-                              <X className="w-4 h-4" />
-                              Cancel Inquiry
-                            </button>
-                          )}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCancelInquiry(inquiry);
+                                  setOpenActionMenuId(null);
+                                }}
+                                className="w-full px-4 py-2.5 text-left text-sm text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-950 transition-colors border-t border-neutral-200 dark:border-neutral-800 flex items-center gap-2"
+                              >
+                                <X className="w-4 h-4" />
+                                Cancel Inquiry
+                              </button>
+                            )}
                         </div>
                       )}
                     </div>
@@ -628,10 +621,10 @@ export default function MyInquiries() {
                     <h3 className="text-base font-semibold text-neutral-900 dark:text-white">
                       {inquiry.inquiryNumber}
                     </h3>
-                    
+
                     <div className="flex items-center gap-2">
                       {getStatusBadge(inquiry.status)}
-                      
+
                       <div className="relative">
                         <button
                           onClick={(e) => {
@@ -657,7 +650,7 @@ export default function MyInquiries() {
                               <Eye className="w-4 h-4" />
                               View Details
                             </button>
-                            
+
                             {inquiry.status === "Quote Sent" && (
                               <button
                                 onClick={(e) => {
@@ -671,7 +664,7 @@ export default function MyInquiries() {
                                 Review Quote
                               </button>
                             )}
-                            
+
                             {inquiry.status === "Draft" && (
                               <button
                                 onClick={(e) => {
@@ -685,7 +678,7 @@ export default function MyInquiries() {
                                 Edit
                               </button>
                             )}
-                            
+
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -697,7 +690,7 @@ export default function MyInquiries() {
                               <Copy className="w-4 h-4" />
                               Copy Inquiry Number
                             </button>
-                            
+
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -709,22 +702,22 @@ export default function MyInquiries() {
                               <Download className="w-4 h-4" />
                               Download PDF
                             </button>
-                            
+
                             {(inquiry.status === "Draft" ||
                               inquiry.status === "Submitted" ||
                               inquiry.status === "Quote Sent") && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleCancelInquiry(inquiry);
-                                  setOpenActionMenuId(null);
-                                }}
-                                className="w-full px-4 py-2.5 text-left text-sm text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-950 transition-colors border-t border-neutral-200 dark:border-neutral-800 flex items-center gap-2"
-                              >
-                                <X className="w-4 h-4" />
-                                Cancel Inquiry
-                              </button>
-                            )}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleCancelInquiry(inquiry);
+                                    setOpenActionMenuId(null);
+                                  }}
+                                  className="w-full px-4 py-2.5 text-left text-sm text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-950 transition-colors border-t border-neutral-200 dark:border-neutral-800 flex items-center gap-2"
+                                >
+                                  <X className="w-4 h-4" />
+                                  Cancel Inquiry
+                                </button>
+                              )}
                           </div>
                         )}
                       </div>
@@ -869,7 +862,7 @@ export default function MyInquiries() {
                                   <Eye className="w-4 h-4" />
                                   View Details
                                 </button>
-                                
+
                                 {inquiry.status === "Quote Sent" && (
                                   <button
                                     onClick={(e) => {
@@ -883,7 +876,7 @@ export default function MyInquiries() {
                                     Review Quote
                                   </button>
                                 )}
-                                
+
                                 {inquiry.status === "Draft" && (
                                   <button
                                     onClick={(e) => {
@@ -897,7 +890,7 @@ export default function MyInquiries() {
                                     Edit
                                   </button>
                                 )}
-                                
+
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -909,7 +902,7 @@ export default function MyInquiries() {
                                   <Copy className="w-4 h-4" />
                                   Copy Inquiry Number
                                 </button>
-                                
+
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -921,22 +914,22 @@ export default function MyInquiries() {
                                   <Download className="w-4 h-4" />
                                   Download PDF
                                 </button>
-                                
+
                                 {(inquiry.status === "Draft" ||
                                   inquiry.status === "Submitted" ||
                                   inquiry.status === "Quote Sent") && (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleCancelInquiry(inquiry);
-                                      setOpenActionMenuId(null);
-                                    }}
-                                    className="w-full px-4 py-2.5 text-left text-sm text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-950 transition-colors border-t border-neutral-200 dark:border-neutral-800 flex items-center gap-2"
-                                  >
-                                    <X className="w-4 h-4" />
-                                    Cancel Inquiry
-                                  </button>
-                                )}
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleCancelInquiry(inquiry);
+                                        setOpenActionMenuId(null);
+                                      }}
+                                      className="w-full px-4 py-2.5 text-left text-sm text-error-600 dark:text-error-400 hover:bg-error-50 dark:hover:bg-error-950 transition-colors border-t border-neutral-200 dark:border-neutral-800 flex items-center gap-2"
+                                    >
+                                      <X className="w-4 h-4" />
+                                      Cancel Inquiry
+                                    </button>
+                                  )}
                               </div>
                             )}
                           </div>

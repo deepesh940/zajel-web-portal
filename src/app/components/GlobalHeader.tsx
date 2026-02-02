@@ -166,6 +166,7 @@ export function GlobalHeader({
       icon: Package,
       description: "Dubai to Abu Dhabi - 500kg",
       status: "Pending Quote",
+      pageId: "inquiry-management",
     },
     {
       id: 2,
@@ -175,6 +176,7 @@ export function GlobalHeader({
       icon: Package,
       description: "Sharjah to Al Ain - Temperature Controlled",
       status: "In Progress",
+      pageId: "inquiry-management",
     },
     {
       id: 3,
@@ -184,6 +186,7 @@ export function GlobalHeader({
       icon: Package,
       description: "Jebel Ali to Ras Al Khaimah - 2000kg",
       status: "Quote Sent",
+      pageId: "inquiry-management",
     },
 
     // Drivers
@@ -195,6 +198,7 @@ export function GlobalHeader({
       icon: Truck,
       description: "ID: DRV-1001 - Rating: 4.8/5",
       status: "Available",
+      pageId: "driver-assignment",
     },
     {
       id: 5,
@@ -204,6 +208,7 @@ export function GlobalHeader({
       icon: Truck,
       description: "ID: DRV-1002 - Rating: 4.9/5",
       status: "On Trip",
+      pageId: "driver-assignment",
     },
     {
       id: 6,
@@ -213,6 +218,7 @@ export function GlobalHeader({
       icon: Truck,
       description: "ID: DRV-1003 - Rating: 4.7/5",
       status: "Available",
+      pageId: "driver-assignment",
     },
 
     // Active Trips
@@ -224,6 +230,7 @@ export function GlobalHeader({
       icon: MapPin,
       description: "Dubai to Sharjah - In Transit",
       status: "Active",
+      pageId: "trip-monitoring",
     },
     {
       id: 8,
@@ -233,6 +240,7 @@ export function GlobalHeader({
       icon: MapPin,
       description: "Abu Dhabi to Dubai - Pickup Complete",
       status: "Active",
+      pageId: "trip-monitoring",
     },
 
     // Customers
@@ -244,6 +252,7 @@ export function GlobalHeader({
       icon: Building2,
       description: "Trade License: TL-2023-45678",
       status: "Verified",
+      pageId: "customer-approvals",
     },
     {
       id: 10,
@@ -253,6 +262,7 @@ export function GlobalHeader({
       icon: Building2,
       description: "Trade License: TL-2023-89012",
       status: "Pending Verification",
+      pageId: "customer-approvals",
     },
 
     // Invoices
@@ -264,6 +274,7 @@ export function GlobalHeader({
       icon: Receipt,
       description: "ABC Corporation - AED 5,500",
       status: "Paid",
+      pageId: "customer-invoicing",
     },
     {
       id: 12,
@@ -273,6 +284,7 @@ export function GlobalHeader({
       icon: Receipt,
       description: "XYZ Logistics LLC - AED 8,900",
       status: "Pending",
+      pageId: "customer-invoicing",
     },
   ];
 
@@ -393,8 +405,8 @@ export function GlobalHeader({
     }
   };
 
-  // Handle search submission
-  const handleSearchSubmit = (query: string) => {
+  // Handle search submission and navigation
+  const handleSearchSubmit = (query: string, pageId?: string) => {
     if (query.trim()) {
       // Add to recent searches
       const newRecent = [
@@ -404,6 +416,11 @@ export function GlobalHeader({
       setRecentSearches(newRecent);
       localStorage.setItem("recentSearches", JSON.stringify(newRecent));
       setShowSearchDropdown(false);
+
+      // Navigate if pageId is provided
+      if (pageId) {
+        window.dispatchEvent(new CustomEvent('navigate', { detail: pageId }));
+      }
     }
   };
 
@@ -509,7 +526,7 @@ export function GlobalHeader({
                             <button
                               key={item.id}
                               onClick={() => {
-                                handleSearchSubmit(searchQuery);
+                                handleSearchSubmit(searchQuery, item.pageId);
                               }}
                               className="w-full px-4 py-3 text-left hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-colors flex items-center gap-3 group"
                             >
@@ -588,7 +605,10 @@ export function GlobalHeader({
                           return (
                             <button
                               key={module.id}
-                              onClick={() => setShowSearchDropdown(false)}
+                              onClick={() => {
+                                setShowSearchDropdown(false);
+                                window.dispatchEvent(new CustomEvent('navigate', { detail: module.module }));
+                              }}
                               className="w-full px-3 py-2.5 text-left hover:bg-neutral-50 dark:hover:bg-neutral-900 rounded-lg transition-colors flex items-center gap-3"
                             >
                               <Icon className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />

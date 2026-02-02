@@ -519,12 +519,7 @@ export default function PricingApproval() {
             { label: "Pricing Approval", current: true },
           ]}
           moreMenu={{
-            onImport: () => toast.success("Import functionality"),
-            exportOptions: {
-              onExportCSV: () => toast.success("Exporting as CSV..."),
-              onExportExcel: () => toast.success("Exporting as Excel..."),
-              onExportPDF: () => toast.success("Exporting as PDF..."),
-            },
+
             onPrint: () => window.print(),
             sortOptions: [
               {

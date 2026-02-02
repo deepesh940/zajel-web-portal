@@ -30,11 +30,20 @@ import {
   AreaChart,
   Area,
 } from "recharts";
-import { PageHeader, IconButton } from "../components/hb/listing";
-import { FormSelect } from "../components/hb/common/Form";
+import {
+  PageHeader,
+  IconButton,
+  SearchBar,
+  AdvancedSearchPanel,
+  FilterChips,
+} from "../components/hb/listing";
+import type { FilterCondition } from "../components/hb/listing";
 import { toast } from "sonner";
 
 export default function Reports() {
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [filters, setFilters] = useState<FilterCondition[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [dateRange, setDateRange] = useState("last-7-days");
   const [reportType, setReportType] = useState("overview");
   const [serviceFilter, setServiceFilter] = useState("all-services");
@@ -132,6 +141,12 @@ export default function Reports() {
     return colors[color as keyof typeof colors] || colors.primary;
   };
 
+  const filterOptions = {
+    'Report Type': ['Overview', 'Operations', 'Financial', 'Customer', 'Team Performance'],
+    'Service': ['All Services', 'Express Delivery', 'Standard Delivery', 'Same Day Delivery'],
+    'Date Range': ['Today', 'Yesterday', 'Last 7 Days', 'Last 30 Days', 'This Month', 'Last Month', 'This Quarter', 'This Year'],
+  };
+
   const handleExportReport = () => {
     toast.success("Exporting report...");
   };
@@ -147,11 +162,6 @@ export default function Reports() {
             { label: "Admin", href: "/admin" },
             { label: "Reports & Analytics", current: true },
           ]}
-          primaryAction={{
-            label: "Export Report",
-            onClick: handleExportReport,
-            icon: Download,
-          }}
           moreMenu={{
             exportOptions: {
               onExportCSV: () => toast.success("Exporting as CSV..."),
@@ -161,6 +171,24 @@ export default function Reports() {
             onPrint: () => window.print(),
           }}
         >
+          <div className="relative">
+            <SearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              onAdvancedSearch={() => setShowAdvancedSearch(true)}
+              activeFilterCount={filters.filter(f => f.values.length > 0).length}
+              placeholder="Search metrics..."
+            />
+
+            <AdvancedSearchPanel
+              isOpen={showAdvancedSearch}
+              onClose={() => setShowAdvancedSearch(false)}
+              filters={filters}
+              onFiltersChange={setFilters}
+              filterOptions={filterOptions}
+            />
+          </div>
+
           <IconButton
             icon={RefreshCw}
             onClick={() => toast.success("Refreshed")}
@@ -168,54 +196,22 @@ export default function Reports() {
           />
         </PageHeader>
 
-        {/* ========== FILTERS ========== */}
-        <div className="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-4 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
-              <FormSelect
-                value={dateRange}
-                onChange={(e) => setDateRange(e.target.value)}
-              >
-                <option value="today">Today</option>
-                <option value="yesterday">Yesterday</option>
-                <option value="last-7-days">Last 7 Days</option>
-                <option value="last-30-days">Last 30 Days</option>
-                <option value="this-month">This Month</option>
-                <option value="last-month">Last Month</option>
-                <option value="this-quarter">This Quarter</option>
-                <option value="this-year">This Year</option>
-              </FormSelect>
-            </div>
+        {/* ========== FILTER CHIPS ========== */}
+        {filters.some((f) => f.values.length > 0) && (
+          <FilterChips
+            filters={filters}
+            onRemove={(filterId) => {
+              setFilters(
+                filters.map((f) =>
+                  f.id === filterId ? { ...f, values: [] } : f
+                )
+              );
+            }}
+            onClearAll={() => setFilters([])}
+          />
+        )}
 
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
-              <FormSelect
-                value={reportType}
-                onChange={(e) => setReportType(e.target.value)}
-              >
-                <option value="overview">Overview</option>
-                <option value="operations">Operations</option>
-                <option value="financial">Financial</option>
-                <option value="customer">Customer</option>
-                <option value="performance">Team Performance</option>
-              </FormSelect>
-            </div>
 
-            <div className="flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
-              <FormSelect
-                value={serviceFilter}
-                onChange={(e) => setServiceFilter(e.target.value)}
-              >
-                <option value="all-services">All Services</option>
-                <option value="express">Express Delivery</option>
-                <option value="standard">Standard Delivery</option>
-                <option value="same-day">Same Day Delivery</option>
-              </FormSelect>
-            </div>
-          </div>
-        </div>
 
         {/* ========== PERFORMANCE METRICS ========== */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -237,11 +233,10 @@ export default function Reports() {
                       <TrendingDown className="w-4 h-4 text-error-600 dark:text-error-400" />
                     )}
                     <span
-                      className={`text-xs font-medium ${
-                        metric.trend === "up"
-                          ? "text-success-600 dark:text-success-400"
-                          : "text-error-600 dark:text-error-400"
-                      }`}
+                      className={`text-xs font-medium ${metric.trend === "up"
+                        ? "text-success-600 dark:text-success-400"
+                        : "text-error-600 dark:text-error-400"
+                        }`}
                     >
                       {metric.change}
                     </span>

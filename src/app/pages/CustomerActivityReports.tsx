@@ -6,17 +6,15 @@ import {
   SummaryWidgets,
   SearchBar,
   Pagination,
-  StatusFilter,
-  DateRangeFilter,
+  AdvancedSearchPanel,
+  FilterChips,
 } from "../components/hb/listing";
+import type { FilterCondition } from "../components/hb/listing";
 import { toast } from "sonner";
 
 export default function CustomerActivityReports() {
-  const [dateRange, setDateRange] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [showDateRangePicker, setShowDateRangePicker] = useState(false);
-  const [customerType, setCustomerType] = useState("all");
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [filters, setFilters] = useState<FilterCondition[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSummary, setShowSummary] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -165,23 +163,42 @@ export default function CustomerActivityReports() {
     },
   ];
 
-  const customerTypeOptions = [
-    { value: "all", label: "All Customers", count: 247 },
-    { value: "enterprise", label: "Enterprise", count: 150 },
-    { value: "sme", label: "SME", count: 75 },
-    { value: "individual", label: "Individual", count: 22 },
-  ];
-
-  const handleRefreshData = () => {
-    toast.success("Refreshing data...");
+  const filterOptions = {
+    'Activity Type': ['New Registration', 'Booking', 'Payment', 'Review'],
+    'Date Range': ['Today', 'Yesterday', 'Last 7 Days', 'Last 30 Days', 'This Month', 'Last Month'],
   };
 
-  const handleDateRangeApply = (start: string, end: string, label?: string) => {
-    setStartDate(start);
-    setEndDate(end);
-    setDateRange(label || `${start} to ${end}`);
-    toast.success(`Date range applied: ${label || `${start} to ${end}`}`);
-  };
+  const filteredData = reportData.filter(item => {
+    const matchesSearch = searchQuery === "" ||
+      item.customerName.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesFilters = filters.every(filter => {
+      if (filter.values.length === 0) return true; // No values selected for this filter
+
+      if (filter.field === 'Activity Type') {
+        const typeMap: Record<string, string> = {
+          'New Registration': 'registration', // Assuming 'registration' is a type in item.type
+          'Booking': 'booking',
+          'Payment': 'payment',
+          'Review': 'review'
+        };
+        // This part needs to be adapted based on actual item.type values.
+        // For now, using item.type as a placeholder.
+        // The sample data only has 'enterprise' and 'sme' for item.type,
+        // so this filter won't match anything unless item.type is updated.
+        return filter.values.some(v => typeMap[v] === item.type);
+      }
+      // Add other filter conditions here if needed
+      return true;
+    });
+
+    return matchesSearch && matchesFilters;
+  });
+
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
     <div className="px-6 py-8 bg-white dark:bg-neutral-950">
@@ -189,7 +206,7 @@ export default function CustomerActivityReports() {
         {/* ========== PAGE HEADER ========== */}
         <PageHeader
           title="Customer Activity Reports"
-          subtitle="Customer engagement and order performance analysis"
+          subtitle="Tracking customer engagement and platform usage"
           breadcrumbs={[
             { label: "Reports", href: "#" },
             { label: "Customer Activity", current: true },
@@ -203,47 +220,51 @@ export default function CustomerActivityReports() {
             onPrint: () => window.print(),
           }}
         >
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search customers..."
-          />
-
           <div className="relative">
-            <IconButton
-              icon={Calendar}
-              onClick={() => setShowDateRangePicker(!showDateRangePicker)}
-              tooltip={dateRange || "Select Date Range"}
-              active={!!dateRange}
+            <SearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              onAdvancedSearch={() => setShowAdvancedSearch(true)}
+              activeFilterCount={filters.filter(f => f.values.length > 0).length}
+              placeholder="Search customers..."
             />
-            <DateRangeFilter
-              isOpen={showDateRangePicker}
-              onClose={() => setShowDateRangePicker(false)}
-              startDate={startDate}
-              endDate={endDate}
-              onApply={handleDateRangeApply}
+
+            <AdvancedSearchPanel
+              isOpen={showAdvancedSearch}
+              onClose={() => setShowAdvancedSearch(false)}
+              filters={filters}
+              onFiltersChange={setFilters}
+              filterOptions={filterOptions}
             />
           </div>
-
-          <StatusFilter
-            currentStatus={customerType}
-            statuses={customerTypeOptions}
-            onChange={setCustomerType}
-          />
 
           <IconButton
             icon={BarChart3}
             onClick={() => setShowSummary(!showSummary)}
-            tooltip="Toggle Summary"
             active={showSummary}
+            title="Toggle summary"
           />
-
           <IconButton
             icon={RefreshCw}
-            onClick={handleRefreshData}
-            tooltip="Refresh Data"
+            onClick={() => toast.success("Refreshed")}
+            title="Refresh"
           />
         </PageHeader>
+
+        {/* ========== FILTER CHIPS ========== */}
+        {filters.some((f) => f.values.length > 0) && (
+          <FilterChips
+            filters={filters}
+            onRemove={(filterId) => {
+              setFilters(
+                filters.map((f) =>
+                  f.id === filterId ? { ...f, values: [] } : f
+                )
+              );
+            }}
+            onClearAll={() => setFilters([])}
+          />
+        )}
 
         {/* ========== SUMMARY WIDGETS ========== */}
         {showSummary && (
@@ -292,58 +313,46 @@ export default function CustomerActivityReports() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
-                {reportData
-                  .filter((row) => {
-                    if (customerType !== "all" && row.type !== customerType) return false;
-                    if (searchQuery) {
-                      const query = searchQuery.toLowerCase();
-                      return (
-                        row.customerId.toLowerCase().includes(query) ||
-                        row.customerName.toLowerCase().includes(query)
-                      );
-                    }
-                    return true;
-                  })
-                  .map((row) => (
-                    <tr
-                      key={row.customerId}
-                      className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors"
-                    >
-                      <td className="px-4 py-3 text-sm font-medium text-primary-600 dark:text-primary-400">
-                        {row.customerId}
-                      </td>
-                      <td className="px-4 py-3 text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                        {row.customerName}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-center text-neutral-700 dark:text-neutral-300">
-                        {row.totalInquiries}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-center text-neutral-700 dark:text-neutral-300">
-                        {row.quotesReceived}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-center text-success-600 dark:text-success-400 font-medium">
-                        {row.quotesAccepted}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-center text-neutral-700 dark:text-neutral-300 font-medium">
-                        {row.conversionRate}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-right text-primary-600 dark:text-primary-400 font-semibold">
-                        {row.totalRevenue}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-right text-neutral-700 dark:text-neutral-300">
-                        {row.avgOrderValue}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-center text-neutral-700 dark:text-neutral-300">
-                        {row.deliveriesCompleted}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-center text-success-600 dark:text-success-400 font-medium">
-                        {row.deliverySuccessRate}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
-                        {row.lastActivity}
-                      </td>
-                    </tr>
-                  ))}
+                {paginatedData.map((row) => (
+                  <tr
+                    key={row.customerId}
+                    className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors"
+                  >
+                    <td className="px-4 py-3 text-sm font-medium text-primary-600 dark:text-primary-400">
+                      {row.customerId}
+                    </td>
+                    <td className="px-4 py-3 text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                      {row.customerName}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-center text-neutral-700 dark:text-neutral-300">
+                      {row.totalInquiries}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-center text-neutral-700 dark:text-neutral-300">
+                      {row.quotesReceived}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-center text-success-600 dark:text-success-400 font-medium">
+                      {row.quotesAccepted}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-center text-neutral-700 dark:text-neutral-300 font-medium">
+                      {row.conversionRate}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-right text-primary-600 dark:text-primary-400 font-semibold">
+                      {row.totalRevenue}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-right text-neutral-700 dark:text-neutral-300">
+                      {row.avgOrderValue}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-center text-neutral-700 dark:text-neutral-300">
+                      {row.deliveriesCompleted}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-center text-success-600 dark:text-success-400 font-medium">
+                      {row.deliverySuccessRate}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
+                      {row.lastActivity}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -352,7 +361,8 @@ export default function CustomerActivityReports() {
         {/* ========== PAGINATION ========== */}
         <Pagination
           currentPage={currentPage}
-          totalItems={247}
+          totalPages={Math.ceil(filteredData.length / itemsPerPage)}
+          totalItems={filteredData.length}
           itemsPerPage={itemsPerPage}
           onPageChange={setCurrentPage}
           onItemsPerPageChange={setItemsPerPage}

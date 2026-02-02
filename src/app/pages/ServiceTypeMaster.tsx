@@ -172,30 +172,10 @@ export default function ServiceTypeMaster() {
   ]);
 
   // Filter options for advanced search
-  const filterOptions: FilterCondition[] = [
-    {
-      id: "status",
-      label: "Status",
-      type: "select",
-      values: [],
-      options: [
-        { value: "Active", label: "Active" },
-        { value: "Inactive", label: "Inactive" },
-      ],
-    },
-    {
-      id: "priority",
-      label: "Priority",
-      type: "select",
-      values: [],
-      options: [
-        { value: "Standard", label: "Standard" },
-        { value: "Express", label: "Express" },
-        { value: "Same Day", label: "Same Day" },
-        { value: "Scheduled", label: "Scheduled" },
-      ],
-    },
-  ];
+  const filterOptions: Record<string, string[]> = {
+    "Status": ["Active", "Inactive"],
+    "Priority": ["Standard", "Express", "Same Day", "Scheduled"],
+  };
 
   // Apply filters
   const filteredServiceTypes = serviceTypes.filter((serviceType) => {
@@ -204,11 +184,11 @@ export default function ServiceTypeMaster() {
       serviceType.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
       serviceType.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const statusFilter = filters.find((f) => f.id === "status");
+    const statusFilter = filters.find((f) => f.field === "Status");
     const matchesStatus =
       !statusFilter || statusFilter.values.length === 0 || statusFilter.values.includes(serviceType.status);
 
-    const priorityFilter = filters.find((f) => f.id === "priority");
+    const priorityFilter = filters.find((f) => f.field === "Priority");
     const matchesPriority =
       !priorityFilter || priorityFilter.values.length === 0 || priorityFilter.values.includes(serviceType.priority);
 
@@ -247,9 +227,8 @@ export default function ServiceTypeMaster() {
     return (
       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
         <div
-          className={`w-1.5 h-1.5 rounded-full ${
-            getStatusColor(status) === "success" ? "bg-success-500" : "bg-neutral-400"
-          }`}
+          className={`w-1.5 h-1.5 rounded-full ${getStatusColor(status) === "success" ? "bg-success-500" : "bg-neutral-400"
+            }`}
         ></div>
         <span className="text-xs text-neutral-600 dark:text-neutral-400">{status}</span>
       </span>
@@ -326,16 +305,16 @@ export default function ServiceTypeMaster() {
         serviceTypes.map((st) =>
           st.id === editingServiceType.id
             ? {
-                ...st,
-                code: formCode,
-                name: formName,
-                description: formDescription,
-                priority: formPriority,
-                slaHours: parseInt(formSlaHours),
-                basePrice: parseFloat(formBasePrice),
-                status: formStatus,
-                modifiedDate: new Date().toISOString().split("T")[0],
-              }
+              ...st,
+              code: formCode,
+              name: formName,
+              description: formDescription,
+              priority: formPriority,
+              slaHours: parseInt(formSlaHours),
+              basePrice: parseFloat(formBasePrice),
+              status: formStatus,
+              modifiedDate: new Date().toISOString().split("T")[0],
+            }
             : st
         )
       );
@@ -404,12 +383,7 @@ export default function ServiceTypeMaster() {
             onClick: handleAddNew,
           }}
           moreMenu={{
-            onImport: () => toast.success("Import functionality"),
-            exportOptions: {
-              onExportCSV: () => toast.success("Exporting as CSV..."),
-              onExportExcel: () => toast.success("Exporting as Excel..."),
-              onExportPDF: () => toast.success("Exporting as PDF..."),
-            },
+
             onPrint: () => window.print(),
             sortOptions: [
               { value: "name", label: "Name (A-Z)", direction: "asc" },
@@ -472,7 +446,7 @@ export default function ServiceTypeMaster() {
                 )
               );
             }}
-            onClearAll={() => setFilters(filterOptions.map((f) => ({ ...f, values: [] })))}
+            onClearAll={() => setFilters([])}
           />
         )}
 

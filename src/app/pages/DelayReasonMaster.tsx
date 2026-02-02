@@ -5,8 +5,6 @@ import {
   Plus,
   BarChart3,
   RefreshCw,
-  Upload,
-  Download,
   Printer,
   Eye,
   Edit2,
@@ -161,7 +159,7 @@ export default function DelayReasonMaster() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedReason, setSelectedReason] = useState<DelayReason | null>(null);
-  
+
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
@@ -193,7 +191,7 @@ export default function DelayReasonMaster() {
       reason.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       reason.nameArabic.includes(searchQuery) ||
       reason.code.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const matchesFilters = filters.every(filter => {
       if (filter.field === 'Status') {
         return filter.values.some(v => v.toLowerCase() === reason.status);
@@ -211,7 +209,7 @@ export default function DelayReasonMaster() {
       }
       return true;
     });
-    
+
     return matchesSearch && matchesFilters;
   });
 
@@ -225,7 +223,7 @@ export default function DelayReasonMaster() {
   }, [searchQuery, filters]);
 
   const getStatusBadge = (status: string) => {
-    const config = status === 'active' 
+    const config = status === 'active'
       ? { color: 'bg-success-500', label: 'Active' }
       : { color: 'bg-error-500', label: 'Inactive' };
     return (
@@ -300,9 +298,16 @@ export default function DelayReasonMaster() {
           title="Delay Reason Master"
           breadcrumbs={[
             { label: 'Master Data', href: '#' },
-            { label: 'Delay Reasons', current: true },
+            { label: 'Delay Reason Master', current: true },
           ]}
+          moreMenu={{
+            onPrint: () => window.print(),
+          }}
         >
+          <PrimaryButton icon={Plus} onClick={handleAdd}>
+            Add Delay Reason
+          </PrimaryButton>
+
           <div className="relative">
             <SearchBar
               value={searchQuery}
@@ -320,36 +325,12 @@ export default function DelayReasonMaster() {
             />
           </div>
 
-          <PrimaryButton icon={Plus} onClick={handleAdd}>
-            Add Delay Reason
-          </PrimaryButton>
           <IconButton icon={BarChart3} onClick={() => setShowSummary(!showSummary)} active={showSummary} />
-          <IconButton icon={RefreshCw} onClick={() => {}} />
+          <IconButton icon={RefreshCw} onClick={() => { }} />
 
-          <div className="relative">
-            <IconButton 
-              icon={MoreVertical} 
-              onClick={() => setShowMoreDropdown(!showMoreDropdown)}
-            />
-            {showMoreDropdown && (
-              <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg py-1 z-50">
-                <button className="w-full px-4 py-2 text-left text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 flex items-center gap-2">
-                  <Upload className="w-4 h-4" />
-                  <span className="text-sm">Import</span>
-                </button>
-                <button className="w-full px-4 py-2 text-left text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 flex items-center gap-2">
-                  <Download className="w-4 h-4" />
-                  <span className="text-sm">Export</span>
-                </button>
-                <button className="w-full px-4 py-2 text-left text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900 flex items-center gap-2">
-                  <Printer className="w-4 h-4" />
-                  <span className="text-sm">Print</span>
-                </button>
-              </div>
-            )}
-          </div>
 
-          <ViewModeSwitcher 
+
+          <ViewModeSwitcher
             currentMode={viewMode}
             onChange={setViewMode}
           />
