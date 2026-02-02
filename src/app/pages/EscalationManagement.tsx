@@ -607,7 +607,6 @@ export default function EscalationManagement({ userRole = "admin" }: EscalationM
               onExportExcel: () => toast.success("Exporting as Excel..."),
               onExportPDF: () => toast.success("Exporting as PDF..."),
             },
-            onPrint: () => window.print(),
             sortOptions: [
               {
                 value: "escalationNumber",

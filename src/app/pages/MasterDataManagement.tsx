@@ -194,7 +194,6 @@ export default function MasterDataManagement() {
             { label: "Master Data Management", current: true },
           ]}
           moreMenu={{
-            onPrint: () => window.print(),
           }}
         >
           <IconButton

@@ -325,7 +325,6 @@ export default function VehicleTypeMaster() {
             { label: 'Vehicle Type Master', current: true },
           ]}
           moreMenu={{
-            onPrint: () => window.print(),
           }}
         >
           <PrimaryButton icon={Plus} onClick={handleAdd}>

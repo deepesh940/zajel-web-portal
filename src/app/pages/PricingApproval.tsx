@@ -520,7 +520,6 @@ export default function PricingApproval() {
           ]}
           moreMenu={{
 
-            onPrint: () => window.print(),
             sortOptions: [
               {
                 value: "inquiryNumber",

@@ -39,8 +39,7 @@
  *       onExportExcel: () => console.log('Export Excel'),
  *       onExportPDF: () => console.log('Export PDF'),
  *     },
- *     onPrint: () => window.print(),
- *     sortOptions: [
+ * *     sortOptions: [
  *       { value: "name", label: "Name (A-Z)", direction: "asc" },
  *       { value: "name", label: "Name (Z-A)", direction: "desc" },
  *     ],
@@ -72,7 +71,6 @@ import {
   MoreVertical,
   Upload,
   Download,
-  Printer,
   ArrowUpDown,
   Columns3,
   ChevronRight,
@@ -107,23 +105,20 @@ export interface ColumnConfig {
 export interface MoreMenuConfig {
   // Import
   onImport?: () => void;
-  
+
   // Export submenu
   exportOptions?: {
     onExportCSV?: () => void;
     onExportExcel?: () => void;
     onExportPDF?: () => void;
   };
-  
-  // Print
-  onPrint?: () => void;
-  
+
   // Sort submenu
   sortOptions?: SortOption[];
   sortField?: string;
   sortDirection?: 'asc' | 'desc';
   onSortChange?: (field: string, direction: 'asc' | 'desc') => void;
-  
+
   // Customize Columns submenu
   customizeColumns?: {
     columns: ColumnConfig[];
@@ -161,7 +156,6 @@ export function PageHeader({
   const hasMoreMenu = moreMenu && (
     moreMenu.onImport ||
     moreMenu.exportOptions ||
-    moreMenu.onPrint ||
     moreMenu.sortOptions ||
     moreMenu.customizeColumns
   );
@@ -205,7 +199,7 @@ export function PageHeader({
               </button>
             )}
             {children}
-            
+
             {hasMoreMenu && (
               <div className="relative" data-flyout-container>
                 <IconButton
@@ -285,19 +279,6 @@ export function PageHeader({
                             )}
                           </div>
                         </div>
-                      </FlyoutMenuItem>
-                    )}
-
-                    {/* Print */}
-                    {moreMenu.onPrint && (
-                      <FlyoutMenuItem
-                        icon={Printer}
-                        onClick={() => {
-                          moreMenu.onPrint?.();
-                          setShowMoreMenu(false);
-                        }}
-                      >
-                        Print
                       </FlyoutMenuItem>
                     )}
 

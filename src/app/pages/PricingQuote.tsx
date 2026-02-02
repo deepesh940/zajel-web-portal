@@ -476,13 +476,6 @@ export default function PricingQuote() {
             icon: Plus,
           }}
           moreMenu={{
-            onImport: () => toast.success("Import functionality"),
-            exportOptions: {
-              onExportCSV: () => toast.success("Exporting as CSV..."),
-              onExportExcel: () => toast.success("Exporting as Excel..."),
-              onExportPDF: () => toast.success("Exporting as PDF..."),
-            },
-            onPrint: () => window.print(),
             sortOptions: [
               {
                 value: "inquiryNumber",

@@ -338,7 +338,6 @@ export default function SLAConfiguration() {
             { label: 'SLA Configuration', current: true },
           ]}
           moreMenu={{
-            onPrint: () => window.print(),
           }}
         >
           <PrimaryButton icon={Plus} onClick={handleAdd}>

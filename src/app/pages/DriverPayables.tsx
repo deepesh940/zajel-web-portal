@@ -494,7 +494,6 @@ export default function DriverPayables() {
               onExportExcel: () => toast.success("Exporting as Excel..."),
               onExportPDF: () => toast.success("Exporting as PDF..."),
             },
-            onPrint: () => window.print(),
             sortOptions: [
               {
                 value: "payableNumber",

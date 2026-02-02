@@ -200,7 +200,7 @@ import { SecondaryButton } from './components/hb/listing';
 ### FlyoutMenu
 
 ```tsx
-import { Upload, Download, Printer } from 'lucide-react';
+import { Upload, Download } from 'lucide-react';
 import { FlyoutMenu, FlyoutMenuItem, FlyoutMenuDivider, NestedFlyout } from './components/hb/listing';
 
 <div className="relative" data-flyout-container>
@@ -242,14 +242,6 @@ import { FlyoutMenu, FlyoutMenuItem, FlyoutMenuDivider, NestedFlyout } from './c
         </NestedFlyout>
       )}
       
-      <FlyoutMenuDivider />
-      
-      <FlyoutMenuItem 
-        icon={Printer} 
-        onClick={() => window.print()}
-        roundedBottom
-      >
-        Print
       </FlyoutMenuItem>
     </FlyoutMenu>
   )}

@@ -625,7 +625,6 @@ export default function CustomerApprovals() {
           }}
           moreMenu={{
 
-            onPrint: () => window.print(),
             sortOptions:
               activeTab === "operational"
                 ? [

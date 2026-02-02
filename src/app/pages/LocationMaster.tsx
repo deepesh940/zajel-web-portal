@@ -356,7 +356,6 @@ export default function LocationMaster() {
             { label: 'Location Master', current: true },
           ]}
           moreMenu={{
-            onPrint: () => window.print(),
           }}
         >
           <PrimaryButton icon={Plus} onClick={handleAdd}>

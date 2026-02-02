@@ -616,7 +616,6 @@ export default function InquiryManagement() {
             icon: Plus,
           }}
           moreMenu={{
-            onPrint: () => window.print(),
             sortOptions: [
               {
                 value: "inquiryNumber",

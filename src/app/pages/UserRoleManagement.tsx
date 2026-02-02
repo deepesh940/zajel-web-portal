@@ -308,12 +308,12 @@ export default function UserRoleManagement() {
       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
         <div
           className={`w-1.5 h-1.5 rounded-full ${getStatusColor(status) === "success"
-              ? "bg-success-500"
-              : getStatusColor(status) === "warning"
-                ? "bg-warning-500"
-                : getStatusColor(status) === "error"
-                  ? "bg-error-500"
-                  : "bg-neutral-400"
+            ? "bg-success-500"
+            : getStatusColor(status) === "warning"
+              ? "bg-warning-500"
+              : getStatusColor(status) === "error"
+                ? "bg-error-500"
+                : "bg-neutral-400"
             }`}
         ></div>
         <span className="text-xs text-neutral-600 dark:text-neutral-400">{status}</span>
@@ -513,7 +513,6 @@ export default function UserRoleManagement() {
           }}
           moreMenu={{
 
-            onPrint: () => window.print(),
             sortOptions: [
               {
                 value: "name",

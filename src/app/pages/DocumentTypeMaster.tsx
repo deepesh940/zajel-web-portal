@@ -308,7 +308,6 @@ export default function DocumentTypeMaster() {
             { label: 'Document Type Master', current: true },
           ]}
           moreMenu={{
-            onPrint: () => window.print(),
           }}
         >
           <PrimaryButton icon={Plus} onClick={handleAdd}>

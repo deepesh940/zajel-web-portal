@@ -301,7 +301,6 @@ export default function DelayReasonMaster() {
             { label: 'Delay Reason Master', current: true },
           ]}
           moreMenu={{
-            onPrint: () => window.print(),
           }}
         >
           <PrimaryButton icon={Plus} onClick={handleAdd}>

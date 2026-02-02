@@ -393,7 +393,6 @@ export default function SLAMonitoring() {
           }}
           moreMenu={{
 
-            onPrint: () => window.print(),
             sortOptions: [
               {
                 value: "inquiryNumber",

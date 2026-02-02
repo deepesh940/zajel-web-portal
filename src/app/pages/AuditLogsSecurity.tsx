@@ -489,7 +489,6 @@ export default function AuditLogsSecurity() {
               onExportExcel: () => toast.success("Exporting as Excel..."),
               onExportPDF: () => toast.success("Exporting as PDF..."),
             },
-            onPrint: () => window.print(),
             sortOptions: [
               { value: "timestamp", label: "Time (Newest First)", direction: "desc" },
               { value: "timestamp", label: "Time (Oldest First)", direction: "asc" },

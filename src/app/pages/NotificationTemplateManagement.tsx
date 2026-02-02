@@ -369,7 +369,6 @@ export default function NotificationTemplateManagement() {
               onExportExcel: () => console.log('Export Excel'),
               onExportPDF: () => console.log('Export PDF'),
             },
-            onPrint: () => window.print(),
           }}
         >
           <div className="relative">

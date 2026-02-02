@@ -512,7 +512,6 @@ export default function QuoteReview() {
           ]}
           moreMenu={{
 
-            onPrint: () => window.print(),
             sortOptions: [
               { value: "quoteNumber", label: "Quote Number (A-Z)", direction: "asc" },
               { value: "quoteNumber", label: "Quote Number (Z-A)", direction: "desc" },

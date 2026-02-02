@@ -423,7 +423,6 @@ export default function PricingRuleMaster() {
           }}
           moreMenu={{
 
-            onPrint: () => window.print(),
             sortOptions: [
               { value: "name", label: "Name (A-Z)", direction: "asc" },
               { value: "name", label: "Name (Z-A)", direction: "desc" },

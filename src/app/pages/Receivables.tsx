@@ -307,14 +307,14 @@ export default function Receivables() {
       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
         <div
           className={`w-1.5 h-1.5 rounded-full ${getStatusColor(status) === "success"
-              ? "bg-success-500"
-              : getStatusColor(status) === "info"
-                ? "bg-info-500"
-                : getStatusColor(status) === "warning"
-                  ? "bg-warning-500"
-                  : getStatusColor(status) === "error"
-                    ? "bg-error-500"
-                    : "bg-neutral-400"
+            ? "bg-success-500"
+            : getStatusColor(status) === "info"
+              ? "bg-info-500"
+              : getStatusColor(status) === "warning"
+                ? "bg-warning-500"
+                : getStatusColor(status) === "error"
+                  ? "bg-error-500"
+                  : "bg-neutral-400"
             }`}
         ></div>
         <span className="text-xs text-neutral-600 dark:text-neutral-400">{status}</span>
@@ -475,7 +475,6 @@ export default function Receivables() {
               onExportExcel: () => toast.success("Exporting as Excel..."),
               onExportPDF: () => toast.success("Exporting as PDF..."),
             },
-            onPrint: () => window.print(),
             sortOptions: [
               {
                 value: "invoiceNumber",
@@ -737,24 +736,24 @@ export default function Receivables() {
 
                   {/* Balance Due */}
                   <div className={`p-3 rounded-lg border ${receivable.status === "Overdue"
-                      ? "bg-error-50 dark:bg-error-900/30 border-error-200 dark:border-error-800"
-                      : receivable.status === "Partial Payment"
-                        ? "bg-warning-50 dark:bg-warning-900/30 border-warning-200 dark:border-warning-800"
-                        : "bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-800"
+                    ? "bg-error-50 dark:bg-error-900/30 border-error-200 dark:border-error-800"
+                    : receivable.status === "Partial Payment"
+                      ? "bg-warning-50 dark:bg-warning-900/30 border-warning-200 dark:border-warning-800"
+                      : "bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-800"
                     }`}>
                     <div className={`text-xs mb-1 ${receivable.status === "Overdue"
-                        ? "text-error-700 dark:text-error-400"
-                        : receivable.status === "Partial Payment"
-                          ? "text-warning-700 dark:text-warning-400"
-                          : "text-primary-700 dark:text-primary-400"
+                      ? "text-error-700 dark:text-error-400"
+                      : receivable.status === "Partial Payment"
+                        ? "text-warning-700 dark:text-warning-400"
+                        : "text-primary-700 dark:text-primary-400"
                       }`}>
                       Balance Due
                     </div>
                     <div className={`text-lg font-bold ${receivable.status === "Overdue"
-                        ? "text-error-600 dark:text-error-400"
-                        : receivable.status === "Partial Payment"
-                          ? "text-warning-600 dark:text-warning-400"
-                          : "text-primary-600 dark:text-primary-400"
+                      ? "text-error-600 dark:text-error-400"
+                      : receivable.status === "Partial Payment"
+                        ? "text-warning-600 dark:text-warning-400"
+                        : "text-primary-600 dark:text-primary-400"
                       }`}>
                       AED {receivable.balanceDue.toLocaleString()}
                     </div>
@@ -990,8 +989,8 @@ export default function Receivables() {
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
                           <div className={`text-sm font-semibold ${receivable.status === "Overdue"
-                              ? "text-error-600 dark:text-error-400"
-                              : "text-neutral-900 dark:text-white"
+                            ? "text-error-600 dark:text-error-400"
+                            : "text-neutral-900 dark:text-white"
                             }`}>
                             AED {receivable.balanceDue.toLocaleString()}
                           </div>
@@ -1226,18 +1225,18 @@ export default function Receivables() {
                   </p>
                 </div>
                 <div className={`p-4 rounded-lg border ${selectedReceivable.status === "Overdue"
-                    ? "bg-error-50 dark:bg-error-900/30 border-error-200 dark:border-error-800"
-                    : "bg-warning-50 dark:bg-warning-900/30 border-warning-200 dark:border-warning-800"
+                  ? "bg-error-50 dark:bg-error-900/30 border-error-200 dark:border-error-800"
+                  : "bg-warning-50 dark:bg-warning-900/30 border-warning-200 dark:border-warning-800"
                   }`}>
                   <p className={`text-xs mb-1 ${selectedReceivable.status === "Overdue"
-                      ? "text-error-700 dark:text-error-400"
-                      : "text-warning-700 dark:text-warning-400"
+                    ? "text-error-700 dark:text-error-400"
+                    : "text-warning-700 dark:text-warning-400"
                     }`}>
                     Balance Due
                   </p>
                   <p className={`text-lg font-bold ${selectedReceivable.status === "Overdue"
-                      ? "text-error-600 dark:text-error-400"
-                      : "text-warning-600 dark:text-warning-400"
+                    ? "text-error-600 dark:text-error-400"
+                    : "text-warning-600 dark:text-warning-400"
                     }`}>
                     AED {selectedReceivable.balanceDue.toLocaleString()}
                   </p>

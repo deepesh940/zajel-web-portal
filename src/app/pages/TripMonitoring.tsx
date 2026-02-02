@@ -640,7 +640,6 @@ export default function TripMonitoring() {
           }}
           moreMenu={{
 
-            onPrint: () => window.print(),
             sortOptions: [
               {
                 value: "tripNumber",

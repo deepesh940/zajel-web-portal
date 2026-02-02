@@ -481,7 +481,6 @@ export default function CustomerInvoicing() {
               onExportExcel: () => toast.success("Exporting as Excel..."),
               onExportPDF: () => toast.success("Exporting as PDF..."),
             },
-            onPrint: () => window.print(),
             sortOptions: [
               {
                 value: "invoiceNumber",

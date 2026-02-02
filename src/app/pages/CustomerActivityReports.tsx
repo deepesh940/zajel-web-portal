@@ -217,7 +217,6 @@ export default function CustomerActivityReports() {
               onExportExcel: () => toast.success("Exporting as Excel..."),
               onExportPDF: () => toast.success("Exporting as PDF..."),
             },
-            onPrint: () => window.print(),
           }}
         >
           <div className="relative">

@@ -250,10 +250,10 @@ export default function MyInquiries() {
     return (
       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
         <div className={`w-1.5 h-1.5 rounded-full ${getStatusColor(status) === 'success' ? 'bg-success-500' :
-            getStatusColor(status) === 'warning' ? 'bg-warning-500' :
-              getStatusColor(status) === 'error' ? 'bg-error-500' :
-                getStatusColor(status) === 'info' ? 'bg-info-500' :
-                  'bg-neutral-400'
+          getStatusColor(status) === 'warning' ? 'bg-warning-500' :
+            getStatusColor(status) === 'error' ? 'bg-error-500' :
+              getStatusColor(status) === 'info' ? 'bg-info-500' :
+                'bg-neutral-400'
           }`}></div>
         <span className="text-xs text-neutral-600 dark:text-neutral-400">{status}</span>
       </span>
@@ -357,7 +357,6 @@ export default function MyInquiries() {
             { label: "My Inquiries", current: true },
           ]}
           moreMenu={{
-            onPrint: () => window.print(),
             sortOptions: [
               { value: "inquiryNumber", label: "Inquiry Number (A-Z)", direction: "asc" },
               { value: "inquiryNumber", label: "Inquiry Number (Z-A)", direction: "desc" },
