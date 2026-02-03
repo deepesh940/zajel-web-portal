@@ -41,6 +41,7 @@ import FinancialReports from "@/app/pages/FinancialReports";
 import RealTimeTracking from "@/app/pages/RealTimeTracking";
 import PublicTracking from "@/app/pages/PublicTracking";
 import OperationalDashboard from "@/app/pages/OperationalDashboard";
+import MyInvoices from "@/app/pages/MyInvoices";
 import { UserRole } from "@/mockAPI/navigationData";
 
 export default function App() {
@@ -253,6 +254,8 @@ export default function App() {
           <DriverPayables />
         ) : currentPage === "customer-invoicing" ? (
           <CustomerInvoicing />
+        ) : currentPage === "my-invoices" ? (
+          <MyInvoices />
         ) : currentPage === "receivables" ? (
           <Receivables />
         ) : currentPage === "financial-reports" ? (

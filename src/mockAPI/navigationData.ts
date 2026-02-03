@@ -89,6 +89,13 @@ const getCustomerMenu = (
       active: currentPage === "escalation-management",
     },
     {
+      id: "my-invoices",
+      label: "My Invoices",
+      icon: Receipt,
+      onClick: () => onNavigate("my-invoices"),
+      active: currentPage === "my-invoices",
+    },
+    {
       id: "profile",
       label: "Profile",
       icon: Users,

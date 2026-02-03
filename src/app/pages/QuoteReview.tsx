@@ -454,7 +454,7 @@ export default function QuoteReview() {
     localStorage.setItem("pendingProformaDraft", JSON.stringify(draft));
 
     // Dispatch custom navigation event
-    const event = new CustomEvent('navigate', { detail: 'customer-invoicing' });
+    const event = new CustomEvent('navigate', { detail: 'my-invoices' });
     window.dispatchEvent(event);
 
     toast.success("Draft proforma invoice created. Redirecting to billing...");
