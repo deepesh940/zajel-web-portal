@@ -245,6 +245,52 @@ export default function MyInvoices() {
         }, 2000);
     };
 
+    // Handle pending proforma draft from Quote Review
+    useEffect(() => {
+        const proformaDraftStr = localStorage.getItem("pendingProformaDraft");
+        if (proformaDraftStr) {
+            try {
+                const draft = JSON.parse(proformaDraftStr);
+                const amount = draft.amount || 0;
+                const taxAmount = Math.round(amount * 0.05 * 100) / 100;
+                const totalAmount = Math.round((amount + taxAmount) * 100) / 100;
+                const today = new Date();
+                const dueDate = new Date(today);
+                dueDate.setDate(dueDate.getDate() + 15);
+
+                const newInvoice: Invoice = {
+                    id: `prof-${Date.now()}`,
+                    invoiceNumber: `PROF-${today.getFullYear()}-${String(invoices.length + 1).padStart(3, "0")}`,
+                    customerName: draft.customerName || "Current User",
+                    customerID: "CUST-SELF",
+                    invoiceDate: today.toISOString().split("T")[0],
+                    dueDate: dueDate.toISOString().split("T")[0],
+                    status: "Draft",
+                    type: "Proforma",
+                    items: [
+                        {
+                            description: draft.description || `Proforma for Quote ${draft.quoteNumber || ""}`,
+                            quantity: 1,
+                            unitPrice: amount,
+                            amount: amount,
+                        },
+                    ],
+                    subtotal: amount,
+                    taxAmount: taxAmount,
+                    totalAmount: totalAmount,
+                    balanceDue: totalAmount,
+                    relatedQuote: draft.quoteNumber || draft.inquiryNumber || undefined,
+                };
+
+                setInvoices(prev => [newInvoice, ...prev]);
+                localStorage.removeItem("pendingProformaDraft");
+                toast.info("Proforma invoice created from your approved quote");
+            } catch (e) {
+                console.error("Failed to parse proforma draft", e);
+            }
+        }
+    }, []);
+
     return (
         <div className="px-6 py-8 bg-white dark:bg-neutral-950">
             <div className="max-w-[100%] mx-auto">
